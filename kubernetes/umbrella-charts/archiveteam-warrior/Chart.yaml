@@ -1,0 +1,9 @@
+apiVersion: v2
+name: archiveteam-warrior
+description: Umbrella chart for ArchiveTeam Warrior deployment
+type: application
+version: 1.0.0
+dependencies:
+  - name: warrior
+    version: 1.2.2
+    repository: https://k8s-at-home.com/charts/

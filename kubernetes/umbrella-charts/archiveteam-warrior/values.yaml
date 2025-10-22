@@ -1,0 +1,41 @@
+warrior:
+  ingress:
+    main:
+      enabled: false
+
+  persistence:
+    config:
+      enabled: true
+      accessMode: ReadWriteMany
+      storageClass: truenas-nfs-nas
+      size: 5Gi
+
+  env:
+    DOWNLOADER:
+      valueFrom:
+        secretKeyRef:
+          name: archiveteam-secrets
+          key: DOWNLOADER
+    SELECTED_PROJECT: "auto"
+
+  controller:
+    replicas: 5
+    strategy: RollingUpdate
+    rollingUpdate:
+      unavailable: 75%
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 75Mi
+    limits:
+      cpu: 400m
+      memory: 300Mi
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: warrior

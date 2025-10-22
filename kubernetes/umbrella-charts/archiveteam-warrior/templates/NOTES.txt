@@ -1,0 +1,17 @@
+################################################################################
+### NOTES
+################################################################################
+
+Thank you for installing the ArchiveTeam Warrior Helm chart!
+
+This release **{{ .Release.Name }}** is deployed in the **{{ .Release.Namespace }}** namespace.
+
+To verify deployment:
+
+  kubectl get pods -n {{ .Release.Namespace }}
+
+To stream logs:
+
+  kubectl logs -f -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Happy archiving!

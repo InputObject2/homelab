@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: archiveteam-warrior
+  namespace: argocd-system
+spec:
+  project: default
+  source:
+    repoURL: "{{ env.GITHUB_REPO_URL }}"
+    targetRevision: main
+    path: homelab/kubernetes/umbrella-charts/archiveteam-warrior
+    helm:
+      parameters:
+        - name: "warrior.env.DOWNLOADER"
+          value: inputobject2
+        - name: "warrior.env.DOMAIN_SUFFIX"
+          value: "{{ env.DOMAIN_SUFFIX }}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: archiveteam
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
