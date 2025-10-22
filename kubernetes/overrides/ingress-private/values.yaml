@@ -1,0 +1,42 @@
+image:
+  registry: docker.io
+  repository: bitnami/nginx-ingress-controller
+  tag: 1.12.1-debian-12-r0
+
+electionID: ingress-controller-leader
+
+ingressClassResource:
+  name: nginx
+  default: true
+  controllerClass: "k8s.io/ingress-nginx"
+
+publishService:
+  enabled: true
+
+replicaCount: 3
+
+service:
+  loadBalancerIP: 10.95.200.1
+
+pdb:
+  create: true
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 250Mi
+  requests:
+    cpu: 10m
+    memory: 180Mi
+
+defaultBackend:
+  replicaCount: 2
+  pdb:
+    create: false
+  resources:
+    limits:
+      cpu: 100m
+      memory: 20Mi
+    requests:
+      cpu: 5m
+      memory: 8Mi
