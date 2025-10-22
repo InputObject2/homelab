@@ -17,6 +17,10 @@ warrior:
           name: archiveteam-secrets
           key: DOWNLOADER
     SELECTED_PROJECT: "auto"
+    WARRIOR_ID:
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
 
   controller:
     replicas: 5
