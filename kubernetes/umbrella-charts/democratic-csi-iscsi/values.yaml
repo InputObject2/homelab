@@ -1,0 +1,57 @@
+democratic-csi:
+  csiDriver:
+    # should be globally unique for a given cluster
+    name: "org.democratic-csi.iscsi-nas"
+    fsGroupPolicy: ReadWriteOnceWithFSType
+
+  # add note here about volume expansion requirements
+  storageClasses:
+  - name: truenas-iscsi-nas
+    defaultClass: false
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      # for block-based storage can be ext3, ext4, xfs
+      fsType: xfs
+
+    mountOptions: []
+    secrets:
+      provisioner-secret:
+      controller-publish-secret:
+      # this is set via external-secrets from Vault
+      node-stage-secret:
+      node-publish-secret:
+      controller-expand-secret:
+
+  driver:
+    # this is set via external-secrets from Vault
+    existingConfigSecret: democratic-csi-iscsi-custom-driver-config
+    # this is now empty as config is provided via existingConfigSecret
+    config:
+      driver: freenas-api-iscsi
+
+  controller:
+    driver:
+      resources:
+        requests:
+          memory: 250Mi
+          cpu: 70m
+        limits:
+          memory: 400Mi
+          cpu: 300m
+      image: docker.io/democraticcsi/democratic-csi:v1.8.4
+    nodeSelector:
+      node.kubernetes.io/microk8s-controlplane: microk8s-controlplane
+    tolerations:
+    - key: "node-role.kubernetes.io/controlplane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+  node:
+    kubeletHostPath: "/var/snap/microk8s/common/var/lib/kubelet"
+    driver:
+      image: docker.io/democraticcsi/democratic-csi:v1.8.4
+    nodeSelector:
+      node.kubernetes.io/microk8s-worker: microk8s-worker
+    tolerations: []
