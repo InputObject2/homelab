@@ -13,15 +13,15 @@ metallb:
     podAnnotations:
       container.apparmor.security.beta.kubernetes.io/speaker: unconfined
     securityContext:
-      capabilities:
-        add:
-          - NET_RAW
-          - NET_ADMIN
-        drop:
-          - ALL
-      privileged: false
-      readOnlyRootFilesystem: true
-      allowPrivilegeEscalation: false
+      #capabilities:
+      #  add:
+      #    - NET_RAW
+      #    - NET_ADMIN
+      #  drop:
+      #    - ALL
+      #privileged: false
+      #readOnlyRootFilesystem: true
+      #allowPrivilegeEscalation: false
       seccompProfile:
         type: Unconfined
   controller:
