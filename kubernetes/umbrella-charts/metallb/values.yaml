@@ -1,50 +1,51 @@
-speaker:
-  frr:
-    image:
-      tag: 10.4.1
-  resources:
-    requests:
-      cpu: 10m
-      memory: 40Mi
-    limits:
-      cpu: 200m
-      memory: 75Mi
-  podAnnotations:
-    container.apparmor.security.beta.kubernetes.io/speaker: unconfined
-  securityContext:
-    capabilities:
-      add:
-        - NET_RAW
-        - NET_ADMIN
-      drop:
-        - ALL
-    privileged: false
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-    seccompProfile:
-      type: Unconfined
-controller:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 50Mi
-    limits:
-      cpu: 200m
-      memory: 75Mi
+metallb:
+  speaker:
+    frr:
+      image:
+        tag: 10.4.1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 40Mi
+      limits:
+        cpu: 200m
+        memory: 75Mi
+    podAnnotations:
+      container.apparmor.security.beta.kubernetes.io/speaker: unconfined
+    securityContext:
+      capabilities:
+        add:
+          - NET_RAW
+          - NET_ADMIN
+        drop:
+          - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      seccompProfile:
+        type: Unconfined
+  controller:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 200m
+        memory: 75Mi
 
-tolerations:
-  - key: "node-role.kubernetes.io/controlplane"
-    operator: "Exists"
-    effect: "NoSchedule"
+  tolerations:
+    - key: "node-role.kubernetes.io/controlplane"
+      operator: "Exists"
+      effect: "NoSchedule"
 
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: node.kubernetes.io/microk8s-controlplane
-          operator: In
-          values:
-          - microk8s-controlplane
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node.kubernetes.io/microk8s-controlplane
+            operator: In
+            values:
+            - microk8s-controlplane
 
 serviceSubnet: 10.95.200.0/24

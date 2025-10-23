@@ -1,37 +1,38 @@
-policy: sync
+external-dns:
+  policy: sync
 
-registry: txt
-txtOwnerId: "apps"
+  registry: txt
+  txtOwnerId: "apps"
 
-provider:
-  name: rfc2136
+  provider:
+    name: rfc2136
 
-env:
-  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
-    valueFrom:
-        secretKeyRef:
-          name: external-dns-secrets
-          key: KEY
+  env:
+    - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
+      valueFrom:
+          secretKeyRef:
+            name: external-dns-secrets
+            key: KEY
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 250Mi
-  requests:
-    cpu: 10m
-    memory: 50Mi
+  resources:
+    limits:
+      cpu: 100m
+      memory: 250Mi
+    requests:
+      cpu: 10m
+      memory: 50Mi
 
-tolerations:
-  - key: "node-role.kubernetes.io/controlplane"
-    operator: "Exists"
-    effect: "NoSchedule"
+  tolerations:
+    - key: "node-role.kubernetes.io/controlplane"
+      operator: "Exists"
+      effect: "NoSchedule"
 
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: node.kubernetes.io/microk8s-controlplane
-          operator: In
-          values:
-          - microk8s-controlplane
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node.kubernetes.io/microk8s-controlplane
+            operator: In
+            values:
+            - microk8s-controlplane
