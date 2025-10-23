@@ -1,0 +1,9 @@
+apiVersion: v2
+name: external-dns
+description: Umbrella chart for external-dns deployment
+type: application
+version: 1.0.0
+dependencies:
+  - name: external-dns
+    version: 1.16.0
+    repository: https://kubernetes-sigs.github.io/external-dns/
