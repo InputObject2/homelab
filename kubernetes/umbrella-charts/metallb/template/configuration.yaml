@@ -1,0 +1,20 @@
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: load-balancer-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - "{{ .Values.serviceSubnet }}"
+  avoidBuggyIPs: true
+
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: advertise-all-pools
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - load-balancer-pool
