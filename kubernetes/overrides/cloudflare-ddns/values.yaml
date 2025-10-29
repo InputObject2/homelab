@@ -1,0 +1,94 @@
+controllers:
+  main:
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        image:
+          repository: "ghcr.io/inputobject2/cloudflare-ddns"
+          tag: "latest"
+        resources:
+          requests:
+            cpu: "55m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+        env:
+          CONFIG_PATH: "/etc/cloudflare-ddns/"
+          CF_DDNS_LOG_LEVEL: debug
+
+service:
+  main:
+    enabled: true
+    ports:
+      http:
+        port: 80
+
+ingress:
+  main:
+    enabled: false
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false # avoid exposing too much info in env vars in case of lateral movement attempt
+
+persistence:
+  config:
+    enabled: true
+    type: secret
+    name: cloudflare-ddns-resolver-config
+    advancedMounts:
+      main:
+        main:
+          - path: "/etc/cloudflare-ddns/"
+
+
+rawResources:
+  cloudflare-ddns-resolver-config:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: cloudflare-ddns-resolver-config
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: vault-backend
+          kind: ClusterSecretStore
+        target:
+          name: cloudflare-ddns-resolver-config
+          creationPolicy: Owner
+          template:
+            type: Opaque
+            engineVersion: v2
+            data:
+              config.json: |
+                {
+                "cloudflare": [
+                  {
+                  "authentication": {
+                    "api_token": "{{ `{{ .CLOUDFLARE_API_TOKEN }}` }}"
+                  },
+                  "zone_id": "{{ `{{ .CLOUDFLARE_ZONE_ID }}` }}",
+                  "subdomains": [
+                    {
+                    "name": "home",
+                    "proxied": true
+                    }
+                  ]
+                  }
+                ],
+                "a": true,
+                "aaaa": false,
+                "purgeUnknownRecords": false,
+                "ttl": 300
+                }
+        data:
+        - secretKey: CLOUDFLARE_API_TOKEN
+          remoteRef:
+            key: apps/cloudflare-ddns
+            property: api_token
+        - secretKey: CLOUDFLARE_ZONE_ID
+          remoteRef:
+            key: apps/cloudflare-ddns
+            property: zone_id
