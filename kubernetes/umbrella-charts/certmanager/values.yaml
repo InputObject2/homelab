@@ -2,8 +2,6 @@ cert-manager:
   # Default values for cert-manager.
   # This is a YAML-formatted file.
   # Declare variables to be passed into your templates.
-  installCRDs: true
-
   global:
     ## Reference to one or more secrets to be used when pulling images
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -43,7 +41,7 @@ cert-manager:
       # The duration the clients should wait between attempting acquisition and
       # renewal of a leadership.
       # retryPeriod: 15s
-
+  installCRDs: true
   replicaCount: 1
 
   strategy: {}
@@ -504,7 +502,7 @@ cert-manager:
     podLabels: {}
 
     image:
-      repository: quay.io/jetstack/cert-manager-ctl
+      repository: quay.io/jetstack/cert-manager-startupapicheck
       # You can manage a registry with
       # registry: quay.io
       # repository: jetstack/cert-manager-ctl
