@@ -25,7 +25,7 @@ cert-manager:
 
     leaderElection:
       # Override the namespace used to store the ConfigMap for leader election
-      namespace: "kube-system"
+      namespace: "certmanager"
 
       # The duration that non-leader candidates will wait after observing a
       # leadership renewal until attempting to acquire leadership of a led but
@@ -104,6 +104,9 @@ cert-manager:
     requests:
       cpu: 10m
       memory: 32Mi
+    limits:
+      cpu: 300m
+      memory: 128Mi
 
   # Pod Security Context
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -271,10 +274,13 @@ cert-manager:
     # Path to a file containing a WebhookConfiguration object used to configure the webhook
     # - --config=<path-to-config-file>
 
-    resources: {}
-      # requests:
-      #   cpu: 10m
-      #   memory: 32Mi
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 300m
+        memory: 128Mi
 
     ## Liveness and readiness probe values
     ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -381,11 +387,11 @@ cert-manager:
     # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
     containerSecurityContext:
       allowPrivilegeEscalation: false
-      # capabilities:
-      #   drop:
-      #   - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
 
 
     # Optional additional annotations to add to the cainjector Deployment
@@ -400,10 +406,13 @@ cert-manager:
     # Enable profiling for cainjector
     # - --enable-profiling=true
 
-    resources: {}
-      # requests:
-      #   cpu: 10m
-      #   memory: 32Mi
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 300m
+        memory: 128Mi
 
     nodeSelector:
       kubernetes.io/os: linux
@@ -462,11 +471,11 @@ cert-manager:
     # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
     containerSecurityContext:
       allowPrivilegeEscalation: false
-      # capabilities:
-      #   drop:
-      #   - ALL
-      # readOnlyRootFilesystem: true
-      # runAsNonRoot: true
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
 
     # Timeout for 'kubectl check api' command
     timeout: 1m
@@ -487,10 +496,13 @@ cert-manager:
     # To see all available flags run docker run quay.io/jetstack/cert-manager-ctl:<version> --help
     extraArgs: []
 
-    resources: {}
-      # requests:
-      #   cpu: 10m
-      #   memory: 32Mi
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 300m
+        memory: 128Mi
 
     nodeSelector: {}
 
@@ -502,7 +514,8 @@ cert-manager:
     podLabels: {}
 
     image:
-      repository: quay.io/jetstack/cert-manager-startupapicheck
+      registry: quay.io
+      repository: jetstack/cert-manager-startupapicheck
       # You can manage a registry with
       # registry: quay.io
       # repository: jetstack/cert-manager-ctl
