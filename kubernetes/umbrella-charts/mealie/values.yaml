@@ -1,0 +1,147 @@
+mealie:
+  ingress:
+    main:
+      enabled: true
+      className: nginx
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: mealie.example.com.
+        cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+        hajimari.io/enable: "true"
+        kubernetes.io/ingress.class: nginx
+      hosts:
+      - host: mealie.example.com
+        paths:
+        - path: "/"
+          pathType: Prefix
+      tls:
+      - secretName: mealie-tls
+        hosts:
+        - mealie.example.com
+
+  persistence:
+    config:
+      enabled: true
+      accessMode: ReadWriteMany
+      storageClass: truenas-nfs-nas
+      size: 3Gi
+      advancedMounts:
+        main: # the controller with the "main" identifier
+          main: # the container with the "main" identifier
+            - path: /config
+    api-data:
+      accessMode: ReadWriteMany
+      enabled: true
+      size: 10Gi
+      storageClass: truenas-nfs-nas
+      advancedMounts:
+        main: # the controller with the "main" identifier
+          main: # the container with the "main" identifier
+            - path: /app/data/
+
+  controllers:
+    main:
+      type: deployment
+      replicas: 2
+      strategy: RollingUpdate
+      containers:
+        main:
+          image:
+            repository: ghcr.io/mealie-recipes/mealie
+            tag: v3.4.0
+          env:
+            BASE_URL: mealie.example.com
+            # OIDC with Authentik
+            OIDC_AUTH_ENABLED: true
+            OIDC_SIGNUP_ENABLED: true
+            OIDC_CONFIGURATION_URL:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc-client-secret
+                  key: configuration_url
+            OIDC_CLIENT_ID:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc-client-secret
+                  key: client_id
+            OIDC_CLIENT_SECRET:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc-client-secret
+                  key: client_secret
+            OIDC_USER_GROUP:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc-client-secret
+                  key: user_group
+            OIDC_ADMIN_GROUP:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc-client-secret
+                  key: admin_group
+            OIDC_AUTO_REDIRECT: false
+            OIDC_PROVIDER_NAME: Authentik
+            OIDC_REMEMBER_ME: true
+            # Postgres
+            DB_ENGINE: postgres
+            POSTGRES_USER: mealie
+            POSTGRES_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-postgresql-secret
+                  key: database_password
+            POSTGRES_SERVER: "{{ .Release.Namespace }}-postgresql"
+            POSTGRES_PORT: 5432
+            POSTGRES_DB:
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-postgresql-secret
+                  key: database_name
+          resources:
+            requests:
+              cpu: 10m
+              memory: 450Mi
+            limits:
+              cpu: 1500m
+              memory: 750Mi
+          ports:
+            - name: http
+              containerPort: 9000
+  service:
+    main:
+      ports:
+        http:
+          port: 9000
+
+
+
+postgres:
+  primary:
+    resources:
+      requests:
+        cpu: 101m
+        memory: 300Mi
+    podSecurityContext:
+      fsGroup: 999
+
+    containerSecurityContext:
+      runAsUser: 999
+
+    extendedConfiguration: |
+      max_connections=500
+
+  volumePermissions:
+    enabled: true
+
+  metrics:
+    enabled: true
+
+global:
+  storageClass: truenas-iscsi-nas
+  postgresql:
+    auth:
+      existingSecret: mealie-postgresql-secret
+      secretKeys:
+        adminPasswordKey: superuser_password
+        userPasswordKey: database_password
+      username: mealie
+      database: mealie
