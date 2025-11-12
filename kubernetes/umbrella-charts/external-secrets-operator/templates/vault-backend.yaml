@@ -1,0 +1,19 @@
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: {{ .Values.vault.url }}
+      path: "secrets"
+      version: "v2"
+      auth:
+        # points to a secret that contains a vault token
+        # https://www.vaultproject.io/docs/auth/token
+        appRole:
+          path: approle
+          roleId: {{ .Values.vault.role_id }}
+          secretRef:
+            name: "vault-token"
+            key: "VAULT_SECRET_ID"
