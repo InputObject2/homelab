@@ -1,0 +1,162 @@
+defaultPodOptions:
+  enableServiceLinks: true
+
+controllers:
+  main:
+    type: statefulset
+    replicas: 1
+    statefulset:
+      persistentVolumeClaimRetentionPolicy:
+        whenDeleted: Retain
+        whenScaled: Retain
+      volumeClaimTemplates:
+      - name: data
+        globalMounts:
+          - path: /mosquitto/data
+        accessMode: ReadWriteMany
+        storageClass: truenas-nfs-nas
+        size: 2Gi
+      - name: logs
+        globalMounts:
+          - path: /mosquitto/log
+        accessMode: ReadWriteMany
+        storageClass: truenas-nfs-nas
+        size: 2Gi
+    containers:
+      main:
+        image:
+          repository: library/eclipse-mosquitto
+          tag: 2.0.22
+        resources:
+          requests:
+            cpu: 40m
+            memory: 200Mi
+          limits:
+            cpu: 1000m
+            memory: 500Mi
+        probes:
+          readiness:
+            enabled: false
+            custom: false
+            type: TCP
+
+ingress:
+  main:
+    enabled: false
+
+service:
+  main:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: test.com.
+      hajimari.io/enable: "true"
+    ports:
+      mqtt:
+        port: 1883
+      mqtt-tls:
+        port: 8883
+
+rawResources:
+  mqtt-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: mqtt-credentials
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: vault-backend
+          kind: ClusterSecretStore
+        target:
+          name: mqtt-credentials
+          creationPolicy: Owner
+          template:
+            type: Opaque
+            engineVersion: v2
+            data:
+              passwd: |
+                {{ `{{ .MQTT_USERNAME }}` }}:{{ `{{ .MQTT_PASSWORD }}` }}
+        data:
+        - secretKey: MQTT_PASSWORD
+          remoteRef:
+            key: apps/home-assistant/mqtt
+            property: encrypted_password
+        - secretKey: MQTT_USERNAME
+          remoteRef:
+            key: apps/home-assistant/mqtt
+            property: username
+
+  mqtt-config:
+    apiVersion: v1
+    kind: ConfigMap
+    spec:
+      metadata:
+        name: mqtt-config
+      data:
+        mosquitto.conf: |
+          # --- listeners ---
+          protocol mqtt
+          listener 1883
+          listener 8883
+
+          # --- TLS MQTT listener ---
+          allow_anonymous false
+          password_file /mosquitto/creds/passwd
+
+          # TLS settings
+          certfile /mosquitto/certs/tls.crt
+          keyfile /mosquitto/certs/tls.key
+
+          # Recommended extras
+          tls_version tlsv1.2
+          persistence true
+          persistence_location /mosquitto/data/
+          log_dest stdout
+          log_timestamp true
+
+
+  mqtt-certificate:
+    apiVersion: cert-manager.io/v1
+    kind: Certificate
+    spec:
+      metadata:
+        name: tls-ha-mqtt
+      spec:
+        dnsNames:
+          - home-assistant-mqtt.test.com
+        issuerRef:
+          group: cert-manager.io
+          kind: ClusterIssuer
+          name: letsencrypt-production-dns01
+        secretName: tls-ha-mqtt
+        usages:
+          - digital signature
+          - key encipherment
+
+persistence:
+  config:
+    enabled: true
+    type: configMap
+    name: mqtt-config
+    advancedMounts:
+      main:
+        main:
+          - path: /mosquitto/config/
+  certs:
+    enabled: true
+    type: secret
+    name: tls-ha-mqtt
+    advancedMounts:
+      main:
+        main:
+          - path: /mosquitto/certs/
+
+  creds:
+    enabled: true
+    type: secret
+    name: mqtt-credentials
+    advancedMounts:
+      main:
+        main:
+          - path: /mosquitto/creds/
