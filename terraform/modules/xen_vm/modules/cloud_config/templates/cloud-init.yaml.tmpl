@@ -1,0 +1,31 @@
+#cloud-config
+hostname: "${hostname}"
+
+users:
+  - name: ${username}
+    gecos: ${username}
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ${public_ssh_key}
+
+package_update: true
+package_upgrade: false
+
+packages:
+%{ for p in packages ~}
+  - ${p}
+%{ endfor ~}
+
+write_files:
+%{ for f in write_files ~}
+  - path: ${f.path}
+    permissions: "${f.permissions}"
+    content: |
+${indent(6, "\n${f.content}")}
+%{ endfor ~}
+
+runcmd:
+%{ for cmd in runcmd ~}
+  - ${cmd}
+%{ endfor ~}
