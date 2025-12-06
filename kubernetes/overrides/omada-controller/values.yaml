@@ -55,8 +55,8 @@ controllers:
           SHOW_SERVER_LOGS: "true"
           SHOW_MONGODB_LOGS: "false"
 
-          SSL_CERT_NAME: "/opt/tplink/EAPController/data/keystore/tls.crt"
-          SSL_KEY_NAME: "/opt/tplink/EAPController/data/keystore/tls.key"
+          SSL_CERT_NAME: "/certs/tls.crt"
+          SSL_KEY_NAME: "/certs/tls.key"
 
           TZ: "Etc/UTC"
           SKIP_USERMOD: "true"
@@ -124,16 +124,17 @@ persistence:
     advancedMounts:
       main:
         main:
-          - path: /opt/tplink/EAPController/data/keystore/tls.crt
+          - path: /certs/tls.crt
             subPath: tls.crt
-          - path: /opt/tplink/EAPController/data/keystore/tls.key
+          - path: /certs/tls.key
             subPath: tls.key
 
 service:
   main:
     enabled: true
     type: NodePort
-
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: omada.example.com.
     ports:
       portal-http:
         port: 8088
