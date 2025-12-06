@@ -25,7 +25,7 @@ cert-manager:
 
     leaderElection:
       # Override the namespace used to store the ConfigMap for leader election
-      namespace: "certmanager"
+      namespace: "kube-system"
 
       # The duration that non-leader candidates will wait after observing a
       # leadership renewal until attempting to acquire leadership of a led but
