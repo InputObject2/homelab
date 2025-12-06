@@ -137,11 +137,11 @@ service:
       external-dns.alpha.kubernetes.io/hostname: omada.example.com.
     ports:
       portal-http:
-        port: 8088
+        port: 80
         targetPort: portal-http
 
       portal-https:
-        port: 8843
+        port: 443
         targetPort: portal-https
 
       app-discovery:
