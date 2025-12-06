@@ -62,10 +62,6 @@ controllers:
           SKIP_USERMOD: "true"
 
         ports:
-          - name: manage-http
-            containerPort: 8088
-          - name: manage-https
-            containerPort: 8043
           - name: portal-http
             containerPort: 8088
           - name: portal-https
