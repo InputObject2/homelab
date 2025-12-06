@@ -68,7 +68,7 @@ locals {
   ip_with_cidr = "${module.virtual_machine.ip_address}/${split("/",cidrsubnet(var.expected_cidr, 0, 0))[1]}"
 }
 
-module "netbox_info" {
+/* module "netbox_info" {
   source = "./modules/netbox"
 
   hostname      = var.hostname
@@ -78,4 +78,4 @@ module "netbox_info" {
   mac_address   = module.mac_address.result
   cloud_config = module.cloud_config.cloud_config_template
   network_config = module.cloud_config.cloud_network_config_template
-}
+} */
