@@ -114,14 +114,6 @@ service:
     type: NodePort
 
     ports:
-      manage-http:
-        port: 8088
-        targetPort: manage-http
-
-      manage-https:
-        port: 8043
-        targetPort: manage-https
-
       portal-http:
         port: 8088
         targetPort: portal-http
