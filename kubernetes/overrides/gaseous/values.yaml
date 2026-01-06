@@ -1,0 +1,393 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+controllers:
+  main:
+    type: deployment
+    strategy: Recreate
+    replicas: 1
+    containers:
+      main:
+        image:
+          repository: "gaseousgames/gaseousserver"
+          tag: "v2.0.0-preview.1"
+        env:
+          Kestrel__Endpoints__Production__Url: http://0.0.0.0:8080
+          PUID: "1000"
+          PGID: "1000"
+          HTTP_PORTS: "8080"
+          dbhost:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-connection-v2
+                key: host
+          dbuser:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-connection-v2
+                key: username
+          dbpass:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-connection-v2
+                key: password
+          dbname:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-connection-v2
+                key: database
+          igdbclientid:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-igdb-creds
+                key: client_id
+          igdbclientsecret:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-igdb-creds
+                key: client_secret
+          oidcauthority:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-oidc-creds
+                key: sts_url
+          oidcclientid:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-oidc-creds
+                key: client_id
+          oidcclientsecret:
+            valueFrom:
+              secretKeyRef:
+                name: gaseous-oidc-creds
+                key: client_secret
+        resources: {}
+        ports:
+          - name: http
+            containerPort: 8080
+        probes:
+          startup:
+            enabled: true
+            spec:
+              initialDelaySeconds: 0
+              timeoutSeconds: 1
+              periodSeconds: 6
+              failureThreshold: 61 # the inital migration can take a while
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+ingress:
+  main:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+      external-dns.alpha.kubernetes.io/hostname: games.mydomain.com.
+      nginx.ingress.kubernetes.io/proxy-body-size: 100000m
+    hosts:
+      - host: games.mydomain.com
+        paths:
+          - path: "/"
+            pathType: Prefix
+            service:
+              name: main
+              port: 8080
+    tls:
+      - hosts:
+          - games.mydomain.com
+        secretName: tls-gaseous
+
+persistence:
+  gs:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 1Ti
+    advancedMounts:
+      main:
+        main:
+          - path: "/home/gaseous/.gaseous-server/Data/Library"
+  firmware:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 10Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/home/gaseous/.gaseous-server/Data/Firmware"
+  import:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 100Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/home/gaseous/.gaseous-server/Data/Import"
+  #upload:
+  #  enabled: true
+  #  accessMode: ReadWriteMany
+  #  storageClass: truenas-nfs-nas
+  #  size: 100Gi
+  #  advancedMounts:
+  #    main:
+  #      main:
+  #        - path: "/home/gaseous/.gaseous-server/Data/Upload"
+  downloads:
+    enabled: true
+    existingClaim: dfs-media-gaseous
+    advancedMounts:
+      main:
+        main:
+          - path: "/home/gaseous/.gaseous-server/Data/Library-custom"
+
+rawResources:
+  pv-media-share:
+    apiVersion: v1
+    kind: PersistentVolume
+    spec:
+      metadata:
+        name: dfs-media-gaseous
+        labels:
+          app: gaseous
+          share: media
+      spec:
+        capacity:
+          storage: 5Ti
+        csi:
+          driver: smb.csi.k8s.io
+          volumeHandle: smb-server.default.svc.cluster.local/dfs-media-gaseous
+          volumeAttributes:
+            source: //10.0.0.1/Media/my-share
+          nodeStageSecretRef:
+            name: gaseous-media-secret
+            namespace: gaseous
+        accessModes:
+          - ReadWriteMany
+        persistentVolumeReclaimPolicy: Retain
+        storageClassName: dfs
+        mountOptions:
+          - dir_mode=0777
+          - file_mode=0777
+          - sec=ntlmssp
+          - vers=3.0
+          - domain=CORE
+          - uid=1000
+          - gid=1000
+        volumeMode: Filesystem
+  pvc-media-share:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    spec:
+      metadata:
+        name: dfs-media-gaseous
+      spec:
+        accessModes:
+          - ReadWriteMany
+        selector:
+          matchLabels:
+            app: gaseous
+            share: media
+        resources:
+          requests:
+            storage: 5Ti
+        volumeName: dfs-media-gaseous
+        storageClassName: dfs
+        volumeMode: Filesystem
+  mariadb-database:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Database
+    spec:
+      metadata:
+        name: gaseous-v2
+      spec:
+        characterSet: utf8
+        cleanupPolicy: Delete
+        collate: utf8_general_ci
+        mariaDbRef:
+          name: mariadb-shared-cluster
+          namespace: database
+          waitForIt: true
+  mariadb-user:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: User
+    spec:
+      metadata:
+        name: gaseous-v2
+      spec:
+        mariaDbRef:
+          name: mariadb-shared-cluster
+          namespace: database
+          waitForIt: true
+        maxUserConnections: 20
+        passwordSecretKeyRef:
+          key: password
+          name: gaseous-user-creds
+  mariadb-grant:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Grant
+    spec:
+      metadata:
+        name: gaseous-access-v2
+      spec:
+        database: gaseous-v2
+        grantOption: false
+        mariaDbRef:
+          name: mariadb-shared-cluster
+          namespace: database
+          waitForIt: true
+        privileges:
+          - ALL
+        table: '*'
+        username: gaseous-v2
+  mariadb-connection:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Connection
+    spec:
+      metadata:
+        name: gaseous-shared-db-connection-v2
+      spec:
+        database: gaseous-v2
+        host: mariadb-shared-cluster-primary.database.svc.cluster.local
+        mariaDbRef:
+          name: mariadb-shared-cluster
+          namespace: database
+          waitForIt: true
+        passwordSecretKeyRef:
+          key: password
+          name: gaseous-user-creds
+        port: 3306
+        secretName: gaseous-connection-v2
+        secretTemplate:
+          databaseKey: database
+          hostKey: host
+          key: dsn
+          passwordKey: password
+          portKey: port
+          usernameKey: username
+        serviceName: mariadb-shared-cluster-primary
+        username: gaseous-v2
+  external-secret-mariadb-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: gaseous-user-creds
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/database
+              metadataPolicy: None
+              property: password
+            secretKey: password
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: gaseous-user-creds
+  external-secret-media-share-readonly-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: gaseous-media-secret
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: common/truenas-media-share-readonly
+              metadataPolicy: None
+              property: password
+            secretKey: password
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: common/truenas-media-share-readonly
+              metadataPolicy: None
+              property: username
+            secretKey: username
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: gaseous-media-secret
+  external-secret-igdb-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: gaseous-igdb-creds
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/igdb
+              metadataPolicy: None
+              property: client_id
+            secretKey: client_id
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/igdb
+              metadataPolicy: None
+              property: client_secret
+            secretKey: client_secret
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: gaseous-igdb-creds
+  external-secret-oidc-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: gaseous-oidc-creds
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/oidc
+              metadataPolicy: None
+              property: client_id
+            secretKey: client_id
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/oidc
+              metadataPolicy: None
+              property: client_secret
+            secretKey: client_secret
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/gaseous/oidc
+              metadataPolicy: None
+              property: sts_url
+            secretKey: sts_url
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: gaseous-oidc-creds
+
+
