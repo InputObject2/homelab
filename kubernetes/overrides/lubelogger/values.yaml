@@ -1,0 +1,206 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+controllers:
+  main:
+    type: deployment
+    strategy: RollingUpdate
+    replicas: 1
+    annotations:
+      k8s_image_swapper: disabled
+    containers:
+      main:
+        image:
+          repository: ghcr.io/hargata/lubelogger
+          tag: v1.4.0
+        resources:
+          limits:
+            cpu: 400m
+            memory: 200Mi
+          requests:
+            cpu: 15m
+            memory: 80Mi
+        env:
+          OpenIDConfig__Name: Authentik
+          OpenIDConfig__ClientId:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: client_id
+          OpenIDConfig__ClientSecret:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: client_secret
+          OpenIDConfig__AuthURL:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: sts_auth_url
+          OpenIDConfig__TokenURL:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: sts_token_url
+          OpenIDConfig__RedirectURL:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: sts_redirect_url
+          OpenIDConfig__Scope: email
+          OpenIDConfig__ValidateState: true
+          OpenIDConfig__DisableRegularLogin: true
+          OpenIDConfig__LogOutURL:
+            valueFrom:
+              secretKeyRef:
+                name: lubelogger-oidc-creds
+                key: sts_logout_url
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  main:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+      external-dns.alpha.kubernetes.io/hostname: car-tracking.mydomain.com.
+      nginx.ingress.kubernetes.io/proxy-body-size: 2000m
+    hosts:
+      - host: car-tracking.mydomain.com
+        paths:
+          - path: "/"
+            pathType: Prefix
+            service:
+              name: main
+              port: 8080
+    tls:
+      - hosts:
+          - car-tracking.mydomain.com
+        secretName: tls-car-tracking
+
+persistence:
+  config:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 1Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/config"
+  data:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 10Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/data"
+  documents:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 1Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/wwwroot/documents"
+  images:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 15Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/wwwroot/images"
+  temp:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 10Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/wwwroot/temp"
+  log:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 5Gi
+    advancedMounts:
+      main:
+        main:
+          - path: "/App/log"
+  keys:
+    enabled: true
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 200Mi
+    advancedMounts:
+      main:
+        main:
+          - path: "/root/.aspnet/DataProtection-Keys"
+
+rawResources:
+  external-secret-oidc-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: lubelogger-oidc-creds
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: client_id
+            secretKey: client_id
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: client_secret
+            secretKey: client_secret
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: sts_auth_url
+            secretKey: sts_auth_url
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: sts_logout_url
+            secretKey: sts_logout_url
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: sts_redirect_url
+            secretKey: sts_redirect_url
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/lubelog/oidc
+              metadataPolicy: None
+              property: sts_token_url
+            secretKey: sts_token_url
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: lubelogger-oidc-creds
