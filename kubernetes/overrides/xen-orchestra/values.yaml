@@ -33,7 +33,7 @@ controllers:
         nameOverride: xen-orchestra
         image:
           repository: ronivay/xen-orchestra
-          tag: 5.194.5
+          tag: 5.194.6
         resources:
           requests:
             cpu: 40m
