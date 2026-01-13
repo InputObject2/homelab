@@ -47,7 +47,7 @@ mealie:
         main:
           image:
             repository: ghcr.io/mealie-recipes/mealie
-            tag: v3.4.0
+            tag: v3.9.2
           env:
             BASE_URL: mealie.example.com
             # OIDC with Authentik
