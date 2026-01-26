@@ -51,6 +51,7 @@ mealie:
           env:
             BASE_URL: mealie.example.com
             # OIDC with Authentik
+            OIDC_TLS_CACERTFILE: "" # Set to empty to use default TLS certs
             OIDC_AUTH_ENABLED: true
             OIDC_SIGNUP_ENABLED: true
             OIDC_CONFIGURATION_URL:
