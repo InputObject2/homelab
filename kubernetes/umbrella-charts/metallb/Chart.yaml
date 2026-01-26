@@ -2,7 +2,7 @@ apiVersion: v2
 name: metallb
 description: Umbrella chart for metallb deployment
 type: application
-version: 1.0.0
+version: 0.2.0
 dependencies:
   - name: metallb
     version: 0.15.3
