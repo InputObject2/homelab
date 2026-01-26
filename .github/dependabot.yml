@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Monitor container images in overrides and values files
+  - package-ecosystem: "docker"
+    directory: "/kubernetes/overrides"
+    schedule:
+      interval: "weekly"
+
+  # Monitor Helm chart versions in ArgoCD apps
+  - package-ecosystem: "helm"
+    directory: "/kubernetes/*-apps/*.yaml"
+    schedule:
+      interval: "weekly"
+
+  # Monitor Helm chart versions in umbrella charts
+  - package-ecosystem: "helm"
+    directory: "/kubernetes/umbrella-charts/*/Chart.yaml"
+    schedule:
+      interval: "weekly"
+
+  # Monitor Terraform modules (if applicable)
+  - package-ecosystem: "terraform"
+    directory: "/terraform/modules"
+    schedule:
+      interval: "weekly"
+
+  # Monitor Terraform environment definitions
+  - package-ecosystem: "terraform"
+    directory: "/terraform/environments"
+    schedule:
+      interval: "weekly"

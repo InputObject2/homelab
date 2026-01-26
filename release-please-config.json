@@ -1,0 +1,55 @@
+{
+  "packages": {
+    "terraform/modules/headscale": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "terraform-module"
+    },
+    "terraform/modules/microk8s": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "terraform-module"
+    },
+    "terraform/modules/network": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "terraform-module"
+    },
+    "terraform/modules/xen_vm": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "terraform-module"
+    },
+    "kubernetes/umbrella-charts/archiveteam-warrior": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/certmanager": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/democratic-csi-iscsi": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/external-dns": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/external-secrets-operator": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/mealie": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "kubernetes/umbrella-charts/metallb": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "helm"
+    },
+    "scripts": {
+      "changelog-path": "CHANGELOG.md",
+      "release-type": "simple"
+    }
+  },
+  "extends": [
+    "config-v1"
+  ]
+}
