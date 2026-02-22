@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/InputObject2/homelab/compare/mealie-v0.2.0...mealie-v0.2.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* mealie new version requires setting OIDC_TLS_CACERTFILE to avoid 500 error ([46dc84a](https://github.com/InputObject2/homelab/commit/46dc84a3c26c9e371f4e3c7248de068ca2f3eba8))
+
 ## [0.2.0](https://github.com/InputObject2/homelab/compare/mealie-v0.1.0...mealie-v0.2.0) (2026-01-26)
 
 
