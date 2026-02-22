@@ -73,7 +73,7 @@ ingress:
           - path: "/"
             pathType: Prefix
             service:
-              name: main
+              name: lubelogger
               port: 8080
     tls:
       - hosts:
