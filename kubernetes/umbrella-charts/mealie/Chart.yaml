@@ -2,7 +2,7 @@ apiVersion: v2
 name: mealie
 description: Umbrella chart for external-dns deployment
 type: application
-version: 0.2.0
+version: 0.2.1
 dependencies:
   - name: app-template
     alias: mealie
