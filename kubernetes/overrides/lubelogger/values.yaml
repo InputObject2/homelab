@@ -10,7 +10,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/hargata/lubelogger
-          tag: v1.5.7
+          tag: v1.6.1
         resources:
           limits:
             cpu: 400m
