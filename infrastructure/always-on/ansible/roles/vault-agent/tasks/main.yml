@@ -1,0 +1,64 @@
+---
+# Deploy vault-agent to fetch secrets from Vault
+
+- name: Create vault-agent directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/vault-agent
+    - /opt/vault-agent/templates
+
+- name: Create per-stack secret directories
+  ansible.builtin.file:
+    path: "/opt/secrets/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ host_stacks }}"
+
+- name: Copy vault-agent config
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../vault-agent/config/{{ vault_agent_config }}"
+    dest: /opt/vault-agent/config.hcl
+    mode: '0644'
+    owner: "100"
+    group: "1000"
+  when: vault_agent_config is defined
+
+- name: Copy vault-agent templates for this host
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../vault-agent/templates/{{ inventory_hostname }}/"
+    dest: /opt/vault-agent/templates/
+    mode: '0644'
+    owner: "100"
+    group: "1000"
+
+- name: Set ownership of vault-agent directory
+  ansible.builtin.file:
+    path: /opt/vault-agent
+    owner: "100"
+    group: "1000"
+    recurse: yes
+
+- name: Set ownership of secrets directories
+  ansible.builtin.file:
+    path: "/opt/secrets/{{ item }}"
+    owner: "100"
+    group: "1000"
+    recurse: yes
+  loop: "{{ host_stacks }}"
+
+- name: Run vault-agent container
+  community.docker.docker_container:
+    name: vault-agent
+    image: "{{ vault_agent_image }}"
+    restart_policy: unless-stopped
+    command: agent -config=/vault-agent/config.hcl
+    volumes:
+      - /opt/vault-agent:/vault-agent
+      - /opt/secrets:/secrets
+    env:
+      VAULT_ADDR: "{{ vault_addr }}"
+    capabilities:
+      - IPC_LOCK

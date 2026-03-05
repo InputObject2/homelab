@@ -1,0 +1,118 @@
+---
+# Common tasks for all always-on machines
+# - Set hostname from inventory
+# - Set timezone
+# - Install base packages
+# - Create ansible system user
+# - Harden SSH
+# - Set up systemd timer for ansible-pull
+# - Enable UFW firewall
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone to America/New_York
+  community.general.timezone:
+    name: America/New_York
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - ansible
+      - curl
+      - wget
+      - gnupg
+      - ca-certificates
+      - python3-hvac
+      - ufw
+    state: present
+    update_cache: yes
+
+#- name: Create ansible system user
+#  ansible.builtin.user:
+#    name: cloud-user
+#    system: yes
+#    shell: /bin/bash
+#    createhome: yes
+#
+#- name: Configure sudoers for ansible user
+#  community.general.sudoers:
+#    name: "cloud-user"
+#    user: "cloud-user"
+#    nopassword: yes
+#    commands: ALL
+#    sudoers_path: /etc/sudoers.d
+
+- name: Harden SSH - disable password auth
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/90-hardening.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart ssh
+
+- name: Allow SSH through UFW
+  community.general.ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: Allow Portainer agent port through UFW
+  community.general.ufw:
+    rule: allow
+    port: '9001'
+    proto: tcp
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    default: deny
+    direction: incoming
+
+- name: Create systemd service for ansible-pull
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ansible-pull.service
+    content: |
+      [Unit]
+      Description=ansible-pull — apply homelab configuration
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      User=root
+      ExecStart=/usr/bin/ansible-pull \
+        --url {{ ansible_pull_repo }} \
+        --directory /opt/ansible-pull \
+        --inventory infrastructure/always-on/ansible/inventory/hosts.yml \
+        {{ ansible_pull_playbook }}
+    mode: '0644'
+  notify: reload systemd
+
+- name: Create systemd timer for ansible-pull
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ansible-pull.timer
+    content: |
+      [Unit]
+      Description=Run ansible-pull every 15 minutes
+
+      [Timer]
+      OnBootSec=5min
+      OnUnitActiveSec=15min
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+    mode: '0644'
+  notify: reload systemd
+
+- name: Enable ansible-pull timer
+  ansible.builtin.systemd:
+    name: ansible-pull.timer
+    enabled: yes
+    daemon_reload: yes

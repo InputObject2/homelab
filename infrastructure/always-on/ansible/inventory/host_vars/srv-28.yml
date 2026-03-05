@@ -1,0 +1,12 @@
+portainer_role: agent
+vault_agent_config: "srv-28.hcl"
+has_vlan30: true
+vlan30_id: 30
+vlan30_network: "10.222.30.0/24"
+vlan30_gateway: "10.222.30.254"
+primary_nic: "enp1s0"   # update to match actual NIC name on srv-28
+
+host_stacks:
+  - homeassistant
+  - matterbridge
+  - voip

@@ -1,0 +1,10 @@
+---
+- name: Apply always-on machine configuration
+  hosts: "{{ inventory_hostname }}"
+  become: true
+  roles:
+    - common
+    - docker
+    - netplan
+    - vault-agent
+    - portainer

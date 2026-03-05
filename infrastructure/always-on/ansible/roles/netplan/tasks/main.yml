@@ -1,0 +1,18 @@
+---
+# Configure networking using netplan
+
+- name: Template netplan config (default - single NIC)
+  ansible.builtin.template:
+    src: netplan-default.j2
+    dest: /etc/netplan/01-config.yaml
+    mode: '0600'
+  when: not has_vlan30
+  notify: apply netplan
+
+- name: Template netplan config (vlan30 - dual NIC with VLAN)
+  ansible.builtin.template:
+    src: netplan-vlan30.j2
+    dest: /etc/netplan/01-config.yaml
+    mode: '0600'
+  when: has_vlan30
+  notify: apply netplan

@@ -1,0 +1,126 @@
+---
+# Bootstrap playbook to be run once from operator laptop
+# Usage: ansible-playbook infrastructure/always-on/ansible/bootstrap.yml \
+#  --inventory infrastructure/always-on/ansible/inventory/hosts.yml \
+#  --extra-vars "vault_token=hvs.xxxxx" \
+#  --ask-become-pass
+#
+# This playbook Sets up Vault policies and AppRoles, then applies common roles to all machines
+
+- name: Vault setup
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Install community.general collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.general
+        creates: ~/.ansible/collections/ansible_collections/community/general
+
+    - name: Install community.docker collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.docker
+        creates: ~/.ansible/collections/ansible_collections/community/docker
+
+    - name: Install community.hashi_vault collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install community.hashi_vault
+        creates: ~/.ansible/collections/ansible_collections/community/hashi_vault
+
+    - name: Create Vault policies
+      community.hashi_vault.vault_write:
+        path: "sys/policies/acl/{{ item.name }}"
+        data:
+          policy: "{{ lookup('file', playbook_dir + '/../vault/policies/' + item.name + '.hcl') }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      loop:
+        - name: shared
+        - name: srv-26
+        - name: srv-27
+        - name: srv-28
+
+    - name: Create AppRole roles
+      community.hashi_vault.vault_write:
+        path: "auth/approle/role/{{ item }}"
+        data:
+          token_ttl: "1h"
+          token_max_ttl: "4h"
+          policies: "shared,{{ item }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      loop:
+        - srv-26
+        - srv-27
+        - srv-28
+
+    - name: Fetch role-ids for each machine
+      community.hashi_vault.vault_read:
+        path: "auth/approle/role/{{ item }}/role-id"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      register: role_ids
+      loop:
+        - srv-26
+        - srv-27
+        - srv-28
+
+    - name: Generate secret-ids for each machine
+      community.hashi_vault.vault_write:
+        path: "auth/approle/role/{{ item }}/secret-id"
+        data: {}
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      register: secret_ids
+      loop:
+        - srv-26
+        - srv-27
+        - srv-28
+
+    - name: Set facts for role-ids
+      ansible.builtin.set_fact:
+        "vault_role_id_{{ item.item | replace('-', '_') }}": "{{ role_ids.results[loop_index0].data.data.role_id }}"
+      loop: "{{ role_ids.results }}"
+      loop_control:
+        index_var: loop_index0
+
+    - name: Set facts for secret-ids
+      ansible.builtin.set_fact:
+        "vault_secret_id_{{ item.item | replace('-', '_') }}": "{{ secret_ids.results[loop_index0].data.data.secret_id }}"
+      loop: "{{ secret_ids.results }}"
+      loop_control:
+        index_var: loop_index0
+
+- name: Machine bootstrap
+  hosts: always_on
+  gather_facts: false
+  become: true
+  pre_tasks:
+    - name: Gather facts
+      ansible.builtin.setup:
+      become: false
+  tasks:
+    - name: Write vault AppRole role-id
+      ansible.builtin.copy:
+        content: "{{ hostvars['localhost']['vault_role_id_' ~ inventory_hostname | replace('-', '_')] }}"
+        dest: /opt/vault-agent/role-id
+        mode: '0640'
+        owner: "100"
+        group: "1000"
+
+    - name: Write vault AppRole secret-id
+      ansible.builtin.copy:
+        content: "{{ hostvars['localhost']['vault_secret_id_' ~ inventory_hostname | replace('-', '_')] }}"
+        dest: /opt/vault-agent/secret-id
+        mode: '0640'
+        owner: "100"
+        group: "1000"
+  roles:
+    - common
+    - docker
+    - netplan
+    - vault-agent
+    - portainer

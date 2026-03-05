@@ -1,0 +1,10 @@
+portainer_role: server
+vault_agent_config: "srv-26.hcl"
+has_vlan30: false
+
+host_stacks:
+  - technitium
+  - tailscale
+  - omada
+  - gatus
+  - ntfy

@@ -1,0 +1,9 @@
+vault_addr: "https://vault.cloud.ntmax.ca"   # update to your Vault VPS address
+ansible_pull_repo: "https://github.com/InputObject2/homelab.git"
+ansible_pull_playbook: "infrastructure/always-on/ansible/site.yml"
+ansible_pull_interval: "*/15 * * * *"             # every 15 minutes
+portainer_server_host: "srv-26"
+portainer_version: "latest"
+vault_agent_image: "hashicorp/vault:1.21.1"
+secrets_base_path: "/opt/secrets"
+vault_agent_config_path: "/opt/vault-agent"

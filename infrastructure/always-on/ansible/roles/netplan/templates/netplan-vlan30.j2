@@ -1,0 +1,16 @@
+network:
+  version: 2
+  ethernets:
+    {{ primary_nic }}:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: 100
+
+  vlans:
+    vlan30:
+      id: {{ vlan30_id }}
+      link: {{ primary_nic }}
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: 200
+        use-routes: false
