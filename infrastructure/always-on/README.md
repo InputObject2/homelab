@@ -33,24 +33,29 @@ Three machines (`srv-26`, `srv-27`, `srv-28`) form the backbone of the homelab i
 
 3. **Create vault secrets** (populate these with real values):
    ```bash
-   vault kv put secret/srv-26/technitium password="xxx"
-   vault kv put secret/srv-26/tailscale authkey="xxx"
-   vault kv put secret/srv-26/omada admin_password="xxx"
-   vault kv put secret/srv-26/gatus discord_webhook="xxx"
-   vault kv put secret/srv-26/ntfy auth_token="xxx"
-   vault kv put secret/srv-27/observability \
+   vault kv put secrets/infra/srv-26/technitium password="xxx"
+   vault kv put secrets/infra/srv-26/tailscale authkey="xxx"
+   vault kv put secrets/infra/srv-26/omada admin_password="xxx"
+   vault kv put secrets/infra/srv-26/gatus discord_webhook="xxx"
+   vault kv put secrets/infra/srv-26/ntfy auth_token="xxx"
+   vault kv put secrets/infra/srv-26/github-runner \
+     token="ghp_xxxxxxxxxxxx" \
+     owner="your-gh-org" \
+     repository="your-repo"
+   vault kv put secrets/infra/srv-27/technitium password="xxx"
+   vault kv put secrets/infra/srv-27/observability \
      grafana_admin_password="xxx" \
      prometheus_retention="30d" \
      influxdb_admin_password="xxx"
-   vault kv put secret/srv-28/homeassistant \
+   vault kv put secrets/infra/srv-28/homeassistant \
      api_token="xxx" \
      latitude="43.6532" \
      longitude="-79.3832"
-   vault kv put secret/srv-28/matterbridge \
+   vault kv put secrets/infra/srv-28/matterbridge \
      irc_password="xxx" \
      slack_token="xxx"
-   vault kv put secret/srv-28/freepbx \
-     admin_password="xxx" \
+   vault kv put secrets/infra/srv-28/voip \
+     freepbx_admin_password="xxx" \
      db_password="xxx" \
      sip_password="xxx"
    ```
@@ -138,7 +143,7 @@ infrastructure/always-on/
 - Add as a Git-backed stack in Portainer, or push and let Portainer auto-sync
 
 **For new secrets:**
-- Add to Vault: `vault kv put secret/srv-xx/app-name key=value`
+- Add to Vault: `vault kv put secrets/infra/srv-xx/app-name key=value`
 - Create template in `vault-agent/templates/srv-xx/app-name.tpl`
 - Reference in `vault-agent/config/srv-xx.hcl`
 - Restart vault-agent: `docker restart vault-agent`
@@ -166,7 +171,7 @@ cat /opt/vault-agent/secret-id
 Check vault-agent logs and verify Vault connectivity:
 ```bash
 docker exec vault-agent vault status
-docker exec vault-agent vault list secret/data/srv-26/
+docker exec vault-agent vault list secrets/data/infra/srv-26/
 ```
 
 **ansible-pull failing?**

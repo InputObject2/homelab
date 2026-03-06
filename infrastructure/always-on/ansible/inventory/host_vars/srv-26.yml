@@ -8,3 +8,4 @@ host_stacks:
   - omada
   - gatus
   - ntfy
+  - github-runner

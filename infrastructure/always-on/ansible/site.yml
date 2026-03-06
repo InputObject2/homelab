@@ -1,6 +1,6 @@
 ---
 - name: Apply always-on machine configuration
-  hosts: "{{ inventory_hostname }}"
+  hosts: always_on
   become: true
   roles:
     - common
