@@ -41,3 +41,8 @@ template {
   source      = "/vault-agent/templates/ntfy.tpl"
   destination = "/secrets/ntfy/ntfy.env"
 }
+
+template {
+  source      = "/vault-agent/templates/github-runner.tpl"
+  destination = "/secrets/github-runner/github-runner.env"
+}

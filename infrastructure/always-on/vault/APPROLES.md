@@ -75,15 +75,50 @@ vault write -f auth/approle/role/srv-28/secret-id
 Create secrets at the paths referenced in vault-agent templates:
 
 ```bash
-# Example for srv-26 technitium
-vault kv put secret/srv-26/technitium \
+# srv-26 secrets
+vault kv put secrets/infra/srv-26/technitium \
   password="your-technitium-admin-password"
 
-# Example for srv-26 tailscale
-vault kv put secret/srv-26/tailscale \
+vault kv put secrets/infra/srv-26/tailscale \
   authkey="tskey-xxxxxxxxxxxxx"
 
-# ... and so on for all stacks and machines
+vault kv put secrets/infra/srv-26/omada \
+  admin_password="your-omada-password"
+
+vault kv put secrets/infra/srv-26/gatus \
+  discord_webhook="https://discord.com/api/webhooks/..."
+
+vault kv put secrets/infra/srv-26/ntfy \
+  auth_token="your-ntfy-token"
+
+vault kv put secrets/infra/srv-26/github-runner \
+  token="ghp_xxxxxxxxxxxx" \
+  owner="your-gh-org" \
+  repository="your-repo"
+
+# srv-27 secrets
+vault kv put secrets/infra/srv-27/technitium \
+  password="your-technitium-admin-password"
+
+vault kv put secrets/infra/srv-27/observability \
+  grafana_admin_password="your-grafana-password" \
+  prometheus_retention="30d" \
+  influxdb_admin_password="your-influxdb-password"
+
+# srv-28 secrets
+vault kv put secrets/infra/srv-28/homeassistant \
+  api_token="your-ha-token" \
+  latitude="43.6532" \
+  longitude="-79.3832"
+
+vault kv put secrets/infra/srv-28/matterbridge \
+  irc_password="your-irc-password" \
+  slack_token="xoxb-xxxxxxxxxxxx"
+
+vault kv put secrets/infra/srv-28/voip \
+  admin_password="your-freepbx-password" \
+  db_password="your-mariadb-password" \
+  sip_password="your-sip-secret"
 ```
 
 ## Automation via bootstrap.yml

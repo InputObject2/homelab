@@ -18,6 +18,11 @@ auto_auth {
 }
 
 template {
+  source      = "/vault-agent/templates/technitium.tpl"
+  destination = "/secrets/technitium/technitium.env"
+}
+
+template {
   source      = "/vault-agent/templates/observability.tpl"
   destination = "/secrets/observability/observability.env"
 }

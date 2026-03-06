@@ -116,3 +116,8 @@
     name: ansible-pull.timer
     enabled: yes
     daemon_reload: yes
+
+- name: Start ansible-pull timer
+  ansible.builtin.systemd:
+    name: ansible-pull.timer
+    state: started
