@@ -1,0 +1,29 @@
+---
+ollama:
+  gpu:
+    enabled: true
+    nvidiaResource: gpu.intel.com/i915
+
+persistentVolume:
+  enabled: true
+  accessModes:
+    - ReadWriteMany
+  size: 300Gi
+  storageClass: "truenas-nfs-nas"
+
+image:
+  tag: 0.17.7
+
+extraEnv:
+  - name: OLLAMA_VULKAN
+    value: "1"     # enable Vulkan backend for GPU acceleration
+  - name: OLLAMA_NUM_GPU
+    value: "999"   # offload all layers to GPU
+  - name: no_proxy
+    value: "localhost,127.0.0.1"
+  - name: ZES_ENABLE_SYSMAN
+    value: "1"     # required for Intel GPU management
+  - name: SYCL_CACHE_PERSISTENT
+    value: "1"     # cache compiled kernels across restarts
+  - name: SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS
+    value: "1"     # performance tuning for Arc
