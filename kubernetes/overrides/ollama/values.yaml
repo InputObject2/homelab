@@ -3,6 +3,46 @@ ollama:
   gpu:
     enabled: true
     nvidiaResource: gpu.intel.com/i915
+  models:
+    pull:
+      - llama3.2:3b
+      - llama3.1:8b
+      - qwen2.5:14b
+      # Qwen3 family
+      - qwen3:1.7b
+      - qwen3:4b
+      - qwen3:8b
+      - qwen3:14b
+      - qwen3:30b-a3b  # MoE variant, lighter than it sounds
+      - qwen3:32b
+
+      # Qwen3 Coder
+      - qwen3-coder:30b  # tight fit but worth trying
+
+      # Ministral family
+      - ministral:3b
+      - ministral:8b
+
+      # Mistral Small
+      - mistral-small3.2:24b
+
+      # Gemma3 family
+      - gemma3:4b
+      - gemma3:12b
+      - gemma3:27b
+
+      # IBM Granite
+      - granite4:3b
+
+      # Cogito family
+      - cogito:3b
+      - cogito:8b
+      - cogito:14b
+      - cogito:32b  # may not fit, try it
+
+      # Specialized
+      - deepseek-ocr:3b
+      - nomic-embed-text  # for RAG later
 
 persistentVolume:
   enabled: true
@@ -21,9 +61,3 @@ extraEnv:
     value: "999"   # offload all layers to GPU
   - name: no_proxy
     value: "localhost,127.0.0.1"
-  - name: ZES_ENABLE_SYSMAN
-    value: "1"     # required for Intel GPU management
-  - name: SYCL_CACHE_PERSISTENT
-    value: "1"     # cache compiled kernels across restarts
-  - name: SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS
-    value: "1"     # performance tuning for Arc
