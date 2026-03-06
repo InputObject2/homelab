@@ -1,0 +1,30 @@
+ollama:
+  # -- Automatically install Ollama Helm chart from https://otwld.github.io/ollama-helm/. Use [Helm Values](https://github.com/otwld/ollama-helm/#helm-values) to configure
+  # @section -- External Tools configuration
+  enabled: false
+
+ollamaUrls: [ ollama:11434 ]
+
+ingress:
+  enabled: true
+  class: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+    external-dns.alpha.kubernetes.io/hostname: chat.example.com.
+  host: "chat.example.com"
+  tls: true
+
+persistence:
+  enabled: true
+  size: 50Gi
+  accessModes:
+    - ReadWriteMany
+  storageClass: "truenas-nfs-nas"
+
+pipelines:
+  persistence:
+    enabled: true
+    size: 50Gi
+    accessModes:
+      - ReadWriteMany
+    storageClass: "truenas-nfs-nas"
