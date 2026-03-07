@@ -6,50 +6,62 @@ ollama:
   models:
     clean: true
     pull:
+      # Fast everyday (fully GPU-resident, ~25-30 tok/s)
       - qwen3:4b
       - qwen3:8b
+      # Mid-range
       - qwen3:14b
-      - qwen3:30b-a3b
-      - qwen3-coder:30b
-      - gemma3:27b
-      - deepseek-r1:7b
-      - deepseek-r1:14b
-      - granite4:3b
       - cogito:8b
       - cogito:14b
       - glm4:9b
+      # Heavy reasoning/coding (slow, partially CPU-offloaded)
+      - qwen3:30b-a3b
+      - qwen3-coder:30b
+      - gemma3:27b
+      # Reasoning (English-focused)
+      - deepseek-r1:7b
+      - deepseek-r1:14b
+      # Specialized
       - deepseek-ocr:3b
       - nomic-embed-text
-
-#persistentVolume:
-#  enabled: true
-#  accessModes:
-#    - ReadWriteMany
-#  size: 300Gi
-#  storageClass: "truenas-nfs-nas"
 
 image:
   tag: 0.17.7
 
 extraEnv:
+  # --- GPU settings for ARC ---
   - name: OLLAMA_VULKAN
-    value: "1"     # enable Vulkan backend for GPU acceleration
-  - name: OLLAMA_NUM_GPU
-    value: "999"   # offload all layers to GPU
-  - name: no_proxy
-    value: "localhost,127.0.0.1"
-  - name: OLLAMA_KEEP_ALIVE
-    value: "5m"   # reduce idle timeout to free GPU memory when not in use
-  - name: OLLAMA_CONTEXT_LENGTH
-    value: "16384"  # increase context length for better performance with large models
-  - name: OLLAMA_KV_CACHE_TYPE
-    value: "q8_0"  # use quantized KV cache to reduce memory usage
-  - name: OLLAMA_FLASH_ATTENTION
-    value: "1"     # enable flash attention for faster transformer computations
-  - name: OLLAMA_MAX_LOADED_MODELS
     value: "1"
+  - name: OLLAMA_NUM_GPU
+    value: "999"
+  - name: GGML_VK_DISABLE_COOPMAT   # prevents cooperative matrix corruption on Intel Arc
+    value: "1"
+  - name: GGML_VK_DISABLE_COOPMAT2
+    value: "1"
+
+  # --- Memory ---
+  - name: OLLAMA_CONTEXT_LENGTH
+    value: "16384"
+  - name: OLLAMA_KV_CACHE_TYPE
+    value: "q8_0"
+  - name: OLLAMA_FLASH_ATTENTION
+    value: "1"
+  - name: OLLAMA_GPU_OVERHEAD
+    value: "536870912"               # reserve 512MB — prevents edge-case OOM evictions
+
+  # --- Scheduling ---
+  - name: OLLAMA_KEEP_ALIVE
+    value: "5m"
+  - name: OLLAMA_MAX_LOADED_MODELS
+    value: "1"                       # prevents VRAM thrashing between model switches
   - name: OLLAMA_NUM_PARALLEL
     value: "1"
+
+  # --- Stability ---
+  - name: no_proxy
+    value: "localhost,127.0.0.1"
+  - name: OLLAMA_NO_CLOUD
+    value: "true"
 
 persistentVolume:
   enabled: true
