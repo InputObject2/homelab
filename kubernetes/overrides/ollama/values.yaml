@@ -60,6 +60,12 @@ extraEnv:
     value: "localhost,127.0.0.1"
   - name: OLLAMA_KEEP_ALIVE
     value: "5m"   # reduce idle timeout to free GPU memory when not in use
+  - name: OLLAMA_CONTEXT_LENGTH
+    value: "16384"  # increase context length for better performance with large models
+  - name: OLLAMA_KV_CACHE_TYPE
+    value: "q8_0"  # use quantized KV cache to reduce memory usage
+  - name: OLLAMA_FLASH_ATTENTION
+    value: "1"     # enable flash attention for faster transformer computations
 
 persistentVolume:
   enabled: true
