@@ -3,7 +3,8 @@ ollama:
   # @section -- External Tools configuration
   enabled: false
 
-ollamaUrls: [ ollama:11434 ]
+ollamaUrls:
+ - http://ollama.ollama.svc.cluster.local:11434
 
 ingress:
   enabled: true
