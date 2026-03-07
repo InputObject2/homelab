@@ -20,8 +20,9 @@ ollama:
       - gemma3:27b
 
       # Phi4 - pick one reasoning variant, they overlap heavily
-      - phi4:14b
-      - phi4-mini-reasoning:3.8b  # drop phi4-reasoning:14b, redundant with phi4:14b
+      # The phi4 models seem to have a bug in ollama with the ARC gpus. Disabling for now
+      #- phi4:14b
+      #- phi4-mini-reasoning:3.8b  # drop phi4-reasoning:14b, redundant with phi4:14b
 
       # DeepSeek R1 - specify a size, bare tag is 7b by default
       - deepseek-r1:7b
