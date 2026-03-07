@@ -44,12 +44,12 @@ ollama:
       - deepseek-ocr:3b
       - nomic-embed-text  # for RAG later
 
-persistentVolume:
-  enabled: true
-  accessModes:
-    - ReadWriteMany
-  size: 300Gi
-  storageClass: "truenas-nfs-nas"
+#persistentVolume:
+#  enabled: true
+#  accessModes:
+#    - ReadWriteMany
+#  size: 300Gi
+#  storageClass: "truenas-nfs-nas"
 
 image:
   tag: 0.17.7
@@ -61,3 +61,42 @@ extraEnv:
     value: "999"   # offload all layers to GPU
   - name: no_proxy
     value: "localhost,127.0.0.1"
+
+persistentVolume:
+  enabled: true
+  existingClaim: ollama-models-hostpath
+
+extraObjects:
+  - apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: ollama-models-hostpath
+    spec:
+      capacity:
+        storage: 200Gi
+      accessModes:
+        - ReadWriteMany
+      hostPath:
+        path: /mnt/ollama
+        type: DirectoryOrCreate
+      nodeAffinity:
+        required:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: intel.feature.node.kubernetes.io/gpu
+                  operator: equals
+                  values:
+                    - true
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ollama-models-hostpath
+      namespace: ollama
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 200Gi
+      volumeName: ollama-models-hostpath
+      storageClassName: ""
