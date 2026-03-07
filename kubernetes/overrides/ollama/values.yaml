@@ -17,6 +17,9 @@ ollama:
       # Gemma3 - skip 4b and 12b, 27b covers it
       - gemma3:27b
 
+      # dolphin3
+      - dolphin3:8b
+
       # IBM Granite
       - granite4:3b     # fast/light, different enough to keep
 
@@ -45,6 +48,8 @@ extraEnv:
     value: "999"   # offload all layers to GPU
   - name: no_proxy
     value: "localhost,127.0.0.1"
+  - name: OLLAMA_KEEP_ALIVE
+    value: "5m"   # reduce idle timeout to free GPU memory when not in use
 
 persistentVolume:
   enabled: true
