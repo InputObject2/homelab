@@ -6,26 +6,36 @@ ollama:
   models:
     clean: true
     pull:
-      # Qwen3 family - drop the redundant small sizes, keep useful steps
-      - qwen3:4b        # fast everyday use
-      - qwen3:14b       # sweet spot
-      - qwen3:30b-a3b   # MoE, runs light, replaces 32b
+      # Qwen3.5 - small sizes only, skip 27b (broken in ollama currently)
+      - qwen3.5:4b
+      - qwen3.5:9b   # multimodal, tool calling, thinking - very fresh
 
-      # Qwen3 Coder - just the one
+      # Qwen3 - keep the MoE workhorse
+      - qwen3:30b-a3b
+
+      # Qwen3 Coder
       - qwen3-coder:30b
 
-      # Gemma3 - skip 4b and 12b, 27b covers it
+      # Gemma3
       - gemma3:27b
 
-      # dolphin3
-      - dolphin3:8b
+      # Phi4 - pick one reasoning variant, they overlap heavily
+      - phi4:14b
+      - phi4-mini-reasoning:3.8b  # drop phi4-reasoning:14b, redundant with phi4:14b
+
+      # DeepSeek R1 - specify a size, bare tag is 7b by default
+      - deepseek-r1:7b
+      - deepseek-r1:14b
 
       # IBM Granite
-      - granite4:3b     # fast/light, different enough to keep
+      - granite4:3b
 
       # Cogito
       - cogito:8b
       - cogito:14b
+
+      # GLM4
+      - glm4:9b
 
       # Specialized
       - deepseek-ocr:3b
