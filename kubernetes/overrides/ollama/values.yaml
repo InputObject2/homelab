@@ -14,19 +14,13 @@ ollama:
       # Qwen3 Coder - just the one
       - qwen3-coder:30b
 
-      # Ministral - 8b is enough, 3b redundant with qwen3:4b
-      - ministral:8b
-
-      # Mistral Small
-      - mistral-small3.2:24b
-
       # Gemma3 - skip 4b and 12b, 27b covers it
       - gemma3:27b
 
       # IBM Granite
       - granite4:3b     # fast/light, different enough to keep
 
-      # Cogito - drop 32b (VRAM), keep the useful range
+      # Cogito
       - cogito:8b
       - cogito:14b
 
