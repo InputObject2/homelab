@@ -6,6 +6,10 @@ ollama:
 ollamaUrls:
  - http://ollama.ollama.svc.cluster.local:11434
 
+
+image:
+  tag: v0.8.9
+
 ingress:
   enabled: true
   class: "nginx"
