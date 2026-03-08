@@ -12,14 +12,21 @@ controllers:
           repository: searxng/searxng
           tag: 2026.3.6-0716de6bc
         env:
-          - name: BASE_URL
+          - name: SEARXNG_BASE_URL
             value: "http://localhost:8080/"
-          - name: BIND_ADDRESS
+          - name: SEARXNG_BIND_ADDRESS
             value: "0.0.0.0:8080"
-          - name: INSTANCE_NAME
+          - name: SEARXNG_INSTANCE_NAME
             value: "Main Cluster Internal SearXNG"
-          - name: AUTOCOMPLETE
-            value: "false"
+          - name: SEARXNG_SETTINGS_PATH
+            value: "/etc/searxng/settings.yml"
+          - name: CONFIG_PATH
+            value: "/usr/local/searxng/searx"
+          - name: SEARXNG_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: searxng-secret
+                key: secret_key
 
 service:
   main:
@@ -30,3 +37,49 @@ service:
 ingress:
   main:
     enabled: false
+
+configMaps:
+  searxng:
+    enabled: true
+    suffix: config
+    data:
+      settings.yml: |
+        use_default_settings: true
+        search:
+          formats:
+            - html
+            - json
+persistence:
+  config:
+    enabled: true
+    type: configMap
+    name: searxng-config
+    advancedMounts:
+      main:
+        main:
+          - path: /etc/searxng/
+
+rawResources:
+  external-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: searxng-secret
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/searxng/secret
+              metadataPolicy: None
+              property: secret_key
+            secretKey: secret_key
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: searxng-secret
