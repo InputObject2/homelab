@@ -9,6 +9,7 @@ ollama:
       # Fast everyday (fully GPU-resident, ~25-30 tok/s)
       - qwen3:4b
       - qwen3:8b
+      - llama3.2:3b
       # Mid-range
       - qwen3:14b
       - cogito:8b
@@ -31,7 +32,7 @@ image:
 extraEnv:
   # --- GPU settings for ARC ---
   - name: OLLAMA_VULKAN
-    value: "1"
+    value: "0"
   - name: OLLAMA_NUM_GPU
     value: "999"
   - name: GGML_VK_DISABLE_COOPMAT   # prevents cooperative matrix corruption on Intel Arc
