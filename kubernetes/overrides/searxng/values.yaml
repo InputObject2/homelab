@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+controllers:
+  main:
+    type: deployment
+    strategy: RollingUpdate
+    replicas: 1
+    annotations:
+      k8s_image_swapper: disabled
+    containers:
+      main:
+        image:
+          repository: searxng/searxng
+          tag: 2026.3.6-0716de6bc
+        env:
+          - name: BASE_URL
+            value: "http://localhost:8080/"
+          - name: BIND_ADDRESS
+            value: "0.0.0.0:8080"
+          - name: INSTANCE_NAME
+            value: "Main Cluster Internal SearXNG"
+          - name: AUTOCOMPLETE
+            value: "false"
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  main:
+    enabled: false

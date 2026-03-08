@@ -29,3 +29,89 @@ pipelines:
     accessModes:
       - ReadWriteMany
     storageClass: "truenas-nfs-nas"
+
+extraEnvVars:
+  - name: OAUTH_CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-creds
+        key: client_id
+  - name: OAUTH_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-creds
+        key: client_secret
+  - name: OPENID_PROVIDER_URL
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-creds
+        key: issuer_url
+  - name: OAUTH_PROVIDER_NAME
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-creds
+        key: provider_name
+  - name: OPENID_REDIRECT_URI
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-creds
+        key: redirect_uri
+  - name: ENABLE_OAUTH_SIGNUP
+    value: "true"
+  - name: OAUTH_MERGE_ACCOUNTS_BY_EMAIL
+    value: "true"
+  - name: ENABLE_LOGIN_FORM
+    value: "false"
+  - name: OAUTH_SCOPES
+    value: "openid email profile"
+
+extraResources:
+  - apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: open-webui-oidc-creds
+    spec:
+      data:
+        - remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: apps/open-webui/oidc
+            metadataPolicy: None
+            property: client_id
+          secretKey: client_id
+        - remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: apps/open-webui/oidc
+            metadataPolicy: None
+            property: client_secret
+          secretKey: client_secret
+        - remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: apps/open-webui/oidc
+            metadataPolicy: None
+            property: issuer_url
+          secretKey: issuer_url
+        - remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: apps/open-webui/oidc
+            metadataPolicy: None
+            property: provider_name
+          secretKey: provider_name
+        - remoteRef:
+            conversionStrategy: Default
+            decodingStrategy: None
+            key: apps/open-webui/oidc
+            metadataPolicy: None
+            property: redirect_uri
+          secretKey: redirect_uri
+      refreshInterval: 1h0m0s
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: vault-backend
+      target:
+        creationPolicy: Owner
+        deletionPolicy: Retain
+        name: open-webui-oidc-creds
