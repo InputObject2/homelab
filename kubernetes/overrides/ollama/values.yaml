@@ -43,9 +43,9 @@ extraEnv:
   - name: OLLAMA_CONTEXT_LENGTH
     value: "16384"
   - name: OLLAMA_KV_CACHE_TYPE
-    value: "q8_0"
+    value: ""
   - name: OLLAMA_FLASH_ATTENTION
-    value: "1"
+    value: "0"
   - name: OLLAMA_GPU_OVERHEAD
     value: "536870912"               # reserve 512MB — prevents edge-case OOM evictions
 
