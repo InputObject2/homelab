@@ -27,34 +27,40 @@ ollama:
       - nomic-embed-text
 
 image:
-  tag: 0.17.7
+  repository: intelanalytics/ipex-llm-inference-cpp-xpu
+  tag: 2.3.0-SNAPSHOT
+
+extraArgs:
+  - /bin/bash
+  - -c
+  - |
+    mkdir -p /llm/ollama
+    cd /llm/ollama
+    init-ollama
+    exec ./ollama serve
 
 extraEnv:
-  # --- GPU settings for ARC ---
-  - name: OLLAMA_VULKAN
-    value: "0"
+  # --- GPU settings for ARC (Level Zero/SYCL via IPEX) ---
   - name: OLLAMA_NUM_GPU
     value: "999"
-  - name: GGML_VK_DISABLE_COOPMAT   # prevents cooperative matrix corruption on Intel Arc
+  - name: ZES_ENABLE_SYSMAN
     value: "1"
-  - name: GGML_VK_DISABLE_COOPMAT2
+  - name: OLLAMA_INTEL_GPU
     value: "1"
 
   # --- Memory ---
   - name: OLLAMA_CONTEXT_LENGTH
     value: "16384"
-  - name: OLLAMA_KV_CACHE_TYPE
-    value: ""
   - name: OLLAMA_FLASH_ATTENTION
     value: "0"
   - name: OLLAMA_GPU_OVERHEAD
-    value: "536870912"               # reserve 512MB — prevents edge-case OOM evictions
+    value: "536870912"
 
   # --- Scheduling ---
   - name: OLLAMA_KEEP_ALIVE
     value: "5m"
   - name: OLLAMA_MAX_LOADED_MODELS
-    value: "1"                       # prevents VRAM thrashing between model switches
+    value: "1"
   - name: OLLAMA_NUM_PARALLEL
     value: "1"
 
@@ -69,6 +75,19 @@ persistentVolume:
   existingClaim: ollama-models-hostpath
 
 extraObjects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: ollama-models-hostpath
+      namespace: ollama
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 200Gi
+      volumeName: ollama-models-hostpath
+      storageClassName: ""
   - apiVersion: v1
     kind: PersistentVolume
     metadata:
@@ -89,16 +108,3 @@ extraObjects:
                   operator: In
                   values:
                     - "true"
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: ollama-models-hostpath
-      namespace: ollama
-    spec:
-      accessModes:
-        - ReadWriteMany
-      resources:
-        requests:
-          storage: 200Gi
-      volumeName: ollama-models-hostpath
-      storageClassName: ""
