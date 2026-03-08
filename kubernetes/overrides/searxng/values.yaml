@@ -49,6 +49,8 @@ configMaps:
           formats:
             - html
             - json
+        language: en
+        locale: en
 persistence:
   config:
     enabled: true
