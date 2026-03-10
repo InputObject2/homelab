@@ -19,9 +19,9 @@ controllers:
           - name: SEARXNG_INSTANCE_NAME
             value: "Main Cluster Internal SearXNG"
           - name: SEARXNG_SETTINGS_PATH
-            value: "/etc/searxng/settings.yml"
+            value: "/usr/local/searxng/config/settings.yml"
           - name: CONFIG_PATH
-            value: "/usr/local/searxng/searx"
+            value: "/usr/local/searxng/config"
           - name: SEARXNG_SECRET
             valueFrom:
               secretKeyRef:
@@ -45,12 +45,36 @@ configMaps:
     data:
       settings.yml: |
         use_default_settings: true
+        server:
+          limiter: false
         search:
           formats:
             - html
             - json
         language: en
         locale: en
+        outgoing:
+          request_timeout: 10.0
+
+        engines:
+          - name: duckduckgo
+            disabled: true
+          - name: google
+            disabled: true
+          - name: wikidata
+            disabled: true
+          - name: bing
+            engine: bing
+            disabled: false
+          - name: brave
+            engine: brave
+            disabled: false
+          - name: mojeek
+            engine: mojeek
+            disabled: false
+      limiter.toml: |
+        [botdetection.ip_lists]
+        pass_ip = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 persistence:
   config:
     enabled: true
@@ -59,7 +83,20 @@ persistence:
     advancedMounts:
       main:
         main:
-          - path: /etc/searxng/
+          - path: /usr/local/searxng/config/settings.yml
+            subPath: settings.yml
+          - path: /usr/local/searxng/config/limiter.toml
+            subPath: limiter.toml
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    size: 5Gi
+    storageClass: truenas-nfs-nas
+    accessMode: ReadWriteMany
+    advancedMounts:
+      main:
+        main:
+          - path: /usr/local/searxng/config
 
 rawResources:
   external-secret:
