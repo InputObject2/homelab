@@ -60,7 +60,7 @@ extraEnv:
   - name: OLLAMA_KEEP_ALIVE
     value: "5m"
   - name: OLLAMA_MAX_LOADED_MODELS
-    value: "1"
+    value: "2" # thinking model+websearch with qwen3:4b
   - name: OLLAMA_NUM_PARALLEL
     value: "1"
 
