@@ -37,6 +37,7 @@ extraArgs:
     mkdir -p /llm/ollama
     cd /llm/ollama
     init-ollama
+    ln -sf /llm/ollama/ollama /bin/ollama
     exec ./ollama serve
 
 extraEnv:
