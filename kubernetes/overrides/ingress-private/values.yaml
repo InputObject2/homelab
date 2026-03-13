@@ -1,7 +1,7 @@
 image:
-  registry: docker.io
-  repository: bitnami/nginx-ingress-controller
-  tag: 1.12.1-debian-12-r0
+  registry: registry.k8s.io
+  repository: ingress-nginx/controller
+  tag: v1.15.0
 
 electionID: ingress-controller-leader
 
@@ -31,6 +31,10 @@ resources:
 
 defaultBackend:
   replicaCount: 2
+  image:
+    registry: registry.k8s.io
+    repository: defaultbackend-amd64
+    tag: "1.5"
   pdb:
     create: false
   resources:
