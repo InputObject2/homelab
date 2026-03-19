@@ -1,0 +1,26 @@
+# yamllint disable rule:braces
+---
+repoURL: "https://github.com/inputobject2/homelab.git"
+targetRevision: main
+domain: "example.com"
+
+stacks:
+  infra:
+    enabled: true
+  storage:
+    enabled: true
+  networking:
+    enabled: true
+  observability:
+    enabled: true
+  ai:
+    enabled: true
+    values:
+      openWebui:
+        subdomain: chat
+  media:
+    enabled: true
+  home:
+    enabled: true
+  apps:
+    enabled: true

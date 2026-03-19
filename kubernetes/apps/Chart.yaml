@@ -1,0 +1,7 @@
+---
+apiVersion: v2
+name: homelab-apps
+description: App of Apps. Renders one ArgoCD Application per stack.
+type: application
+version: 0.1.0
+

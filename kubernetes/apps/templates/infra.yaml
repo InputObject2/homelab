@@ -1,0 +1,41 @@
+{{- if .Values.stacks.infra.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-stack
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.repoURL | quote }}
+    targetRevision: {{ .Values.targetRevision }}
+    path: kubernetes/stacks/infra
+    helm:
+      parameters:
+        - name: domain
+          value: {{ .Values.domain | quote }}
+        - name: certmanager.cloudflare.email
+          value: {{ .Values.stacks.infra.certmanager.cloudflare.email | quote }}
+        - name: externalDns.rfc2136.host
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.host | quote }}
+        - name: externalDns.rfc2136.port
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.port | quote }}
+        - name: externalDns.rfc2136.zone
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.zone | quote }}
+        - name: externalDns.rfc2136.tsigSecretAlg
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigSecretAlg | quote }}
+        - name: externalDns.rfc2136.tsigKeyname
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigKeyname | quote }}
+        - name: externalDns.ingressClass
+          value: {{ .Values.stacks.infra.externalDns.ingressClass | quote }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{- end }}
