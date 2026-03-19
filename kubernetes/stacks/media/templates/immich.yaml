@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      path: kubernetes/umbrella-charts/immich
+      helm:
+        values: |
+          immich:
+            ingress:
+              main:
+                enabled: true
+                ingressClassName: nginx
+                annotations:
+                  external-dns.alpha.kubernetes.io/hostname: {{ include "media.immich.hostname" . }}.
+                  cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+                  hajimari.io/enable: "true"
+                  nginx.ingress.kubernetes.io/proxy-body-size: "0"
+                hosts:
+                  - host: {{ include "media.immich.hostname" . }}
+                    paths:
+                      - path: /
+                tls:
+                  - secretName: photos-tls
+                    hosts:
+                      - {{ include "media.immich.hostname" . }}
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: immich
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: open-webui
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://helm.openwebui.com/
+      chart: open-webui
+      targetRevision: 12.8.1
+      helm:
+        valueFiles:
+          - $values/kubernetes/overrides/open-webui/values.yaml
+        parameters:
+          - name: "ingress.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
+            value: '{{ include "ai.openWebui.hostname" . }}.'
+          - name: "ingress.host"
+            value: '{{ include "ai.openWebui.hostname" . }}'
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      ref: values
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: {{ .Values.destination.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

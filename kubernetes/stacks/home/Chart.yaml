@@ -1,0 +1,5 @@
+apiVersion: v2
+name: home-stack
+description: Home automation stack for homelab
+type: application
+version: 0.1.0

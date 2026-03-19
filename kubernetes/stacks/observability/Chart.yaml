@@ -1,0 +1,5 @@
+apiVersion: v2
+name: observability-stack
+description: Observability stack for homelab
+type: application
+version: 0.1.0

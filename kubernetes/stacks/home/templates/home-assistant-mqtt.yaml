@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-mqtt
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts/
+      chart: app-template
+      targetRevision: 4.1.2
+      helm:
+        valueFiles:
+          - $values/kubernetes/overrides/home-assistant-mqtt/values.yaml
+        parameters:
+          - name: "service.main.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
+            value: '{{ include "home.homeAssistantMqtt.hostname" . }}.'
+          - name: "rawResources.mqtt-certificate.spec.spec.dnsNames[0]"
+            value: '{{ include "home.homeAssistantMqtt.hostname" . }}'
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      ref: values
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

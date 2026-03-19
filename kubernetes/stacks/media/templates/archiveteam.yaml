@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: archiveteam-warrior
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      path: kubernetes/umbrella-charts/archiveteam-warrior
+      helm:
+        parameters:
+          - name: "warrior.env.DOMAIN_SUFFIX"
+            value: {{ .Values.domain | quote }}
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: archiveteam
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

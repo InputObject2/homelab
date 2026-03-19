@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: infra-stack
+description: Infrastructure stack for homelab
+type: application
+version: 0.1.0

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: media-stack
+description: Media stack for homelab
+type: application
+version: 0.1.0

@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      path: kubernetes/umbrella-charts/external-dns
+      helm:
+        values: |
+          external-dns:
+            domainFilters:
+              - services.k8s.{{ .Values.domain }}
+              - {{ .Values.domain }}
+            extraArgs:
+              - --rfc2136-host={{ .Values.externalDns.rfc2136.host | quote }}
+              - --rfc2136-port={{ .Values.externalDns.rfc2136.port | quote }}
+              - --rfc2136-zone={{ .Values.externalDns.rfc2136.zone | quote }}
+              - --rfc2136-tsig-secret-alg={{ .Values.externalDns.rfc2136.tsigSecretAlg | quote }}
+              - --rfc2136-tsig-keyname={{ .Values.externalDns.rfc2136.tsigKeyname | quote }}
+              - --rfc2136-tsig-axfr
+              - --ingress-class={{ .Values.externalDns.ingressClass | quote }}
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gaseous
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts/
+      chart: app-template
+      targetRevision: 4.1.2
+      helm:
+        valueFiles:
+          - $values/kubernetes/overrides/gaseous/values.yaml
+        values: |
+          ingress:
+            main:
+              enabled: true
+              className: nginx
+              annotations:
+                external-dns.alpha.kubernetes.io/hostname: {{ include "media.gaseous.hostname" . }}.
+                cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+              hosts:
+                - host: {{ include "media.gaseous.hostname" . }}
+                  paths:
+                    - path: /
+                      pathType: Prefix
+              tls:
+                - secretName: tls-gaseous
+                  hosts:
+                    - {{ include "media.gaseous.hostname" . }}
+          controllers:
+            main:
+              containers:
+                main:
+                  env:
+                    BASE_URL: "https://{{ include "media.gaseous.hostname" . }}"
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      ref: values
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: {{ .Values.destination.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

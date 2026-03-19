@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zammad
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      path: kubernetes/umbrella-charts/zammad
+      helm:
+        values: |
+          zammad:
+            ingress:
+              enabled: true
+              className: nginx
+              annotations:
+                external-dns.alpha.kubernetes.io/hostname: {{ include "apps.zammad.hostname" . }}.
+                cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+                kubernetes.io/ingress.class: nginx
+                hajimari.io/enable: "true"
+              hosts:
+                - host: {{ include "apps.zammad.hostname" . }}
+                  paths:
+                    - path: /
+                      pathType: ImplementationSpecific
+              tls:
+                - secretName: issues-tls
+                  hosts:
+                    - {{ include "apps.zammad.hostname" . }}
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: zammad
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

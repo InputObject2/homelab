@@ -1,0 +1,20 @@
+---
+repoURL: "https://github.com/inputobject2/homelab.git"
+targetRevision: main
+domain: "example.com"
+
+destination:
+  server: https://kubernetes.default.svc
+  namespace: apps
+
+mealie:
+  subdomain: recettes
+
+lubelogger:
+  subdomain: car-tracking
+
+zammad:
+  subdomain: issues
+
+xenOrchestra:
+  subdomain: xen-orchestra

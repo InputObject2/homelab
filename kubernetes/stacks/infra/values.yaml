@@ -1,0 +1,22 @@
+---
+repoURL: "https://github.com/inputobject2/homelab.git"
+targetRevision: main
+domain: "example.com"
+
+destination:
+  server: https://kubernetes.default.svc
+  namespace: kube-system
+
+# Per-app values can be added here if needed
+certmanager:
+  cloudflare:
+    email: ""
+
+externalDns:
+  rfc2136:
+    host: ""
+    port: ""
+    zone: ""
+    tsigSecretAlg: ""
+    tsigKeyname: ""
+  ingressClass: ""
