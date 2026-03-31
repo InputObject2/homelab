@@ -121,3 +121,22 @@
   ansible.builtin.systemd:
     name: ansible-pull.timer
     state: started
+
+- name: Ensure [Resolve] section exists in resolved.conf for Technitium hosts
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^\[Resolve\]$'
+    line: '[Resolve]'
+    insertafter: EOF
+    state: present
+  when: "'technitium' in host_stacks"
+
+- name: Disable systemd-resolved DNS stub listener for Technitium hosts
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^DNSStubListener='
+    line: DNSStubListener=no
+    insertafter: '^\[Resolve\]$'
+    state: present
+  when: "'technitium' in host_stacks"
+  notify: restart systemd-resolved

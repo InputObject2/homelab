@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:2026.3.4@sha256:916682086154a7390114a9788782b8efb199852d4f7d47066722c2bc5d1829e6
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    volumes:
+      - homeassistant_config:/config
+      - /run/dbus:/run/dbus:ro
+    env_file:
+      - /opt/secrets/homeassistant/homeassistant.env
+
+  matterbridge:
+    image: 42wim/matterbridge:1.26.0@sha256:ba9ae3b54776d4e4a1317cd7929d62326f7d3dd75e37eb038e01e33e18e41164
+    container_name: matterbridge
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./matterbridge.toml:/etc/matterbridge/matterbridge.toml
+      - matterbridge_data:/data
+    env_file:
+      - /opt/secrets/matterbridge/matterbridge.env
+
+  python-matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:8.1@sha256:170aa093ce91c76cde4cc390918307590f0f5558fcec93f913af3cb019e6562a
+    container_name: python-matter-server
+    restart: unless-stopped
+    volumes:
+      - python_matter_server_data:/data
+    env_file:
+      - /opt/secrets/python-matter-server/python-matter-server.env
+
+  matter-hub:
+    image: ghcr.io/t0bst4r/home-assistant-matter-hub:3.0.1@sha256:7d61541d0bb2137def4d8384e0f9b3b26f0e572e1e1d3e98c1c5ee7cb85a4621
+    container_name: matter-hub
+    restart: unless-stopped
+    volumes:
+      - matter_hub_data:/data
+    env_file:
+      - /opt/secrets/matter-hub/matter-hub.env
+
+  esphome:
+    image: ghcr.io/esphome/esphome:2026.3.1@sha256:cb9875ef7b63ecefea0e599c97981bea22e4d8ee5c822b03fbf22ccebcbbb49c
+    container_name: esphome
+    restart: unless-stopped
+    volumes:
+      - esphome_data:/config
+    env_file:
+      - /opt/secrets/esphome/esphome.env
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:2.9.1@sha256:574b2bd0dcbb59fae6edbbb81a35b5563291d3825da0225f0078aa5575dac37f
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    volumes:
+      - zigbee2mqtt_data:/app/data
+    env_file:
+      - /opt/secrets/zigbee2mqtt/zigbee2mqtt.env
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22@sha256:6852da90a65dfff7aa3a1c8b249e92bb83c17ea8bbcce56bedff8707332a1a29
+    container_name: mosquitto
+    restart: unless-stopped
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    env_file:
+      - /opt/secrets/mosquitto/mosquitto.env
+
+volumes:
+  homeassistant_config:
+  matterbridge_data:
+  python_matter_server_data:
+  matter_hub_data:
+  esphome_data:
+  zigbee2mqtt_data:
+  mosquitto_data:
+  mosquitto_logs:

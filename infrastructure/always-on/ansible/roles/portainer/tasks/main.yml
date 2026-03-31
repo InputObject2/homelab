@@ -19,6 +19,7 @@
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+      - /opt/secrets:/opt/secrets:ro
   when: portainer_role == "server"
 
 - name: Deploy Portainer agent

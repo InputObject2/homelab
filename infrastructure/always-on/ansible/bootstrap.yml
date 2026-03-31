@@ -2,7 +2,7 @@
 # Bootstrap playbook to be run once from operator laptop
 # Usage: ansible-playbook infrastructure/always-on/ansible/bootstrap.yml \
 #  --inventory infrastructure/always-on/ansible/inventory/hosts.yml \
-#  --extra-vars "vault_token=hvs.xxxxx" \
+#  --extra-vars "vault_token=hvs.xxxxx vault_addr=https://vault.your-domain.com" \
 #  --ask-become-pass
 #
 # This playbook Sets up Vault policies and AppRoles, then applies common roles to all machines

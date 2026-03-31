@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  technitium:
+    image: technitium/dns-server:14.3.0@sha256:322b236403ca25028032f28736e2270a860527b030b162c9f82451c6494c4698
+    container_name: technitium
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "5380:5380/tcp"
+    volumes:
+      - technitium_data:/etc/technitium
+    env_file:
+      - /opt/secrets/technitium/technitium.env
+
+volumes:
+  technitium_data:

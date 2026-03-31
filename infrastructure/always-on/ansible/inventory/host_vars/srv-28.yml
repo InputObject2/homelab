@@ -9,4 +9,9 @@ primary_nic: "enp1s0"   # update to match actual NIC name on srv-28
 host_stacks:
   - homeassistant
   - matterbridge
+  - python-matter-server
+  - matter-hub
+  - esphome
+  - zigbee2mqtt
+  - mosquitto
   - voip

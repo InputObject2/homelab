@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  freepbx:
+    image: tiredofit/freepbx:5.2.0@sha256:e758153f8c1f23ef7b9affcc07385108028024fb7f44d291e4274a8e7b7a8475
+    container_name: freepbx
+    restart: unless-stopped
+    ports:
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5160:5160/tcp"
+      - "5160:5160/udp"
+      - "10000-20000:10000-20000/udp"
+    volumes:
+      - freepbx_data:/var/lib/asterisk
+      - freepbx_config:/etc/asterisk
+    env_file:
+      - /opt/secrets/voip/voip.env
+    depends_on:
+      - mysql
+
+  tftpd:
+    image: pghalliday/tftp:latest@sha256:59f843a93d62ac6e2fa475ee3d1a3786464fe5ea0334e6f1ea79bdec837f09fa
+    container_name: tftpd
+    restart: unless-stopped
+    ports:
+      - "69:69/udp"
+    volumes:
+      - ./tftpboot:/tftpboot
+
+  mysql:
+    image: mariadb:12.2.2@sha256:e16f61b8f6ed25111adbb1c5c19bbc2904efc8ed14029999af0cbe1c7ae18bf1
+    container_name: mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306/tcp"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    env_file:
+      - /opt/secrets/voip/voip.env
+
+volumes:
+  freepbx_data:
+  freepbx_config:
+  mysql_data:

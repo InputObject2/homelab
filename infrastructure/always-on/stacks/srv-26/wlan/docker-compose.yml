@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  omada-controller:
+    image: mbentley/omada-controller:6.1.0.19-openj9@sha256:c922c472aaa95253b812dbb7330363471a021d3a408eb1672c0cdf3ee6d314e4
+    container_name: omada
+    restart: unless-stopped
+    ports:
+      - "8088:8088/tcp"
+      - "8043:8043/tcp"
+      - "29810:29810/udp"
+      - "29811:29811/tcp"
+      - "29812:29812/tcp"
+    volumes:
+      - omada_data:/opt/tplink/EAPController/data
+    env_file:
+      - /opt/secrets/omada/omada.env
+
+volumes:
+  omada_data:

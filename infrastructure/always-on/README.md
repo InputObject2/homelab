@@ -5,9 +5,9 @@ This directory contains the complete implementation spec and automation for the 
 ## Overview
 
 Three machines (`srv-26`, `srv-27`, `srv-28`) form the backbone of the homelab infrastructure, providing:
-- **srv-26**: DNS, VPN gateway, WLAN controller, monitoring clients, GitHub Actions runner, Portainer server
-- **srv-27**: Secondary DNS, Grafana, Prometheus, Loki, InfluxDB (observability stack)
-- **srv-28**: Home Assistant, Matterbridge, FreePBX + VOIP, Portainer agent
+- **srv-26**: Primary DNS (Technitium), network fabric (Tailscale, Gatus, ntfy), WLAN controller (Omada), GitHub Actions runner
+- **srv-27**: Secondary DNS (Technitium, zone transfer from srv-26), observability stack (Prometheus, Grafana, Loki, InfluxDB, Promtail)
+- **srv-28**: Home automation (Home Assistant, Matterbridge, python-matter-server, matter-hub, ESPHome, Zigbee2MQTT, Mosquitto), VoIP (FreePBX, TFTP, MariaDB)
 
 ## Quick Start
 
@@ -109,9 +109,17 @@ infrastructure/always-on/
 │       └── portainer/          # Deploy Portainer server/agent
 │
 ├── stacks/                     # Docker Compose workloads (managed by Portainer)
-│   ├── srv-26/docker-compose.yml
-│   ├── srv-27/docker-compose.yml
-│   └── srv-28/docker-compose.yml
+│   ├── srv-26/
+│   │   ├── dns/docker-compose.yml       # Technitium DNS
+│   │   ├── infra/docker-compose.yml     # Tailscale, Gatus, ntfy
+│   │   ├── wlan/docker-compose.yml      # Omada controller
+│   │   └── cicd/docker-compose.yml      # GitHub Actions runner
+│   ├── srv-27/
+│   │   ├── dns/docker-compose.yml       # Technitium DNS (secondary)
+│   │   └── observability/docker-compose.yml  # Prometheus, Grafana, Loki, InfluxDB, Promtail
+│   └── srv-28/
+│       ├── ha/docker-compose.yml        # Home Assistant, Matterbridge, Matter, ESPHome, Zigbee2MQTT, Mosquitto
+│       └── voip/docker-compose.yml      # FreePBX, TFTP, MariaDB
 │
 ├── vault/                      # Vault configuration
 │   ├── policies/               # Vault policies (shared, srv-26, srv-27, srv-28)
@@ -139,8 +147,10 @@ infrastructure/always-on/
 - Or manually trigger: `ssh ansible@srv-host sudo systemctl start ansible-pull.service`
 
 **For Docker/application changes:**
-- Edit `stacks/<hostname>/docker-compose.yml`
-- Add as a Git-backed stack in Portainer, or push and let Portainer auto-sync
+- Edit the relevant `stacks/<hostname>/<stack>/docker-compose.yml`
+- Each stack is registered independently in Portainer as a Git-backed stack
+- Portainer stack path format: `infrastructure/always-on/stacks/<hostname>/<stack>`
+- Push to main branch and trigger a pull in Portainer, or let auto-sync run
 
 **For new secrets:**
 - Add to Vault: `vault kv put secrets/infra/srv-xx/app-name key=value`
