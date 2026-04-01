@@ -7,6 +7,7 @@ auto_auth {
     config = {
       role_id_file_path   = "/vault-agent/role-id"
       secret_id_file_path = "/vault-agent/secret-id"
+      remove_secret_id_file_after_reading = false
     }
   }
 
