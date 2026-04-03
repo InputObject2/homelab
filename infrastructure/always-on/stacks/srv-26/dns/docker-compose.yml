@@ -9,10 +9,13 @@ services:
       - "53:53/tcp"
       - "53:53/udp"
       - "5380:5380/tcp"
+      - "53443:53443/tcp"
     volumes:
-      - technitium_data:/etc/technitium
+      - technitium_data:/etc/dns
     env_file:
       - /opt/secrets/technitium/technitium.env
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65535
 
 volumes:
   technitium_data:
