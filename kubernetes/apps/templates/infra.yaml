@@ -20,17 +20,17 @@ spec:
         - name: certmanager.cloudflare.email
           value: {{ .Values.stacks.infra.certmanager.cloudflare.email | quote }}
         - name: externalDns.rfc2136.host
-          value: {{ .Values.stacks.infra.externalDns.rfc2136.host | quote }}
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.host }}
         - name: externalDns.rfc2136.port
           value: {{ .Values.stacks.infra.externalDns.rfc2136.port | quote }}
         - name: externalDns.rfc2136.zone
-          value: {{ .Values.stacks.infra.externalDns.rfc2136.zone | quote }}
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.zone }}
         - name: externalDns.rfc2136.tsigSecretAlg
-          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigSecretAlg | quote }}
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigSecretAlg }}
         - name: externalDns.rfc2136.tsigKeyname
-          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigKeyname | quote }}
+          value: {{ .Values.stacks.infra.externalDns.rfc2136.tsigKeyname }}
         - name: externalDns.ingressClass
-          value: {{ .Values.stacks.infra.externalDns.ingressClass | quote }}
+          value: {{ .Values.stacks.infra.externalDns.ingressClass }}
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd-system
