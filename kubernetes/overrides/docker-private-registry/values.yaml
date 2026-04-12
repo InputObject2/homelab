@@ -77,7 +77,7 @@ ingress:
           - path: /
             pathType: Prefix
             service:
-              name: main
+              name: docker-private-registry-v2
               port: 5000
     tls:
       - hosts:
