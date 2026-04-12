@@ -20,3 +20,6 @@ externalDns:
     tsigSecretAlg: ""
     tsigKeyname: ""
   ingressClass: ""
+
+dockerPrivateRegistry:
+  hostname: "docker-private-registry.example.com"
