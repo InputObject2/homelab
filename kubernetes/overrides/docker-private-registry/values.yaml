@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
 controllers:
   main:
     type: deployment
@@ -14,6 +15,44 @@ controllers:
           limits:
             cpu: 600m
             memory: 800Mi
+        env:
+          - name: REGISTRY_HTTP_ADDR
+            value: :5000
+          - name: REGISTRY_HTTP_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: registry-cluster-key
+                key: key
+          - name: REGISTRY_STORAGE
+            value: s3
+          - name: REGISTRY_STORAGE_S3_REGIONENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: registry-s3-backend
+                key: endpoint
+          - name: REGISTRY_STORAGE_S3_REGION
+            value: us-east-1        # arbitrary but required
+          - name: REGISTRY_STORAGE_S3_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: registry-s3-backend
+                key: bucket
+          - name: REGISTRY_STORAGE_S3_SECURE
+            value: "true"
+          - name: REGISTRY_STORAGE_S3_FORCEPATHSTYLE
+            value: "true"
+          - name: REGISTRY_STORAGE_REDIRECT_DISABLE
+            value: "true"
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: registry-s3-backend
+                key: accessKey
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: registry-s3-backend
+                key: secretKey
 
 service:
   main:
@@ -24,7 +63,7 @@ service:
 ingress:
   main:
     enabled: true
-    ingressClassName: nginx
+    className: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-production-dns01
       external-dns.alpha.kubernetes.io/hostname: docker-private-registry.example.com.
@@ -37,6 +76,9 @@ ingress:
         paths:
           - path: /
             pathType: Prefix
+            service:
+              name: main
+              port: 5000
     tls:
       - hosts:
           - docker-private-registry.example.com
@@ -45,9 +87,77 @@ ingress:
 persistence:
   registry-data:
     enabled: true
-    type: pvc
-    accessMode: ReadWriteMany
-    storageClass: truenas-nfs-nas
-    size: 300Gi
-    globalMounts:
-      - path: /var/lib/registry
+    existingClaim: docker-private-registry-registry-data
+    advancedMounts:
+      main:
+        main:
+          - path: /var/lib/registry
+
+rawResources:
+  registry-cluster-key:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: registry-cluster-key
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/registry/cluster
+              metadataPolicy: None
+              property: key
+            secretKey: key
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: registry-cluster-key
+  registry-s3-backend:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: registry-s3-backend
+      spec:
+        data:
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/registry/s3
+              metadataPolicy: None
+              property: endpoint
+            secretKey: endpoint
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/registry/s3
+              metadataPolicy: None
+              property: bucket
+            secretKey: bucket
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/registry/s3
+              metadataPolicy: None
+              property: accessKey
+            secretKey: accessKey
+          - remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: apps/registry/s3
+              metadataPolicy: None
+              property: secretKey
+            secretKey: secretKey
+        refreshInterval: 1h0m0s
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          creationPolicy: Owner
+          deletionPolicy: Retain
+          name: registry-s3-backend

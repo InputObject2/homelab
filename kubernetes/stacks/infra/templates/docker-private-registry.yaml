@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: docker-private-registry
+  name: docker-private-registry-v2
   namespace: argocd-system
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -16,17 +16,17 @@ spec:
           - $values/kubernetes/overrides/docker-private-registry/values.yaml
         parameters:
           - name: 'ingress.main.annotations.external-dns\.alpha\.kubernetes\.io/hostname'
-            value: '{{ .Values.dockerPrivateRegistry.hostname }}.'
+            value: 'docker-private-registry-v2.{{ .Values.domain }}.'
           - name: 'ingress.main.hosts[0].host'
-            value: {{ .Values.dockerPrivateRegistry.hostname | quote }}
+            value: 'docker-private-registry-v2.{{ .Values.domain }}'
           - name: 'ingress.main.tls[0].hosts[0]'
-            value: {{ .Values.dockerPrivateRegistry.hostname | quote }}
+            value: 'docker-private-registry-v2.{{ .Values.domain }}'
     - repoURL: {{ .Values.repoURL | quote }}
       targetRevision: {{ .Values.targetRevision }}
       ref: values
   destination:
     server: {{ .Values.destination.server | quote }}
-    namespace: docker-private-registry
+    namespace: registry
   syncPolicy:
     automated:
       prune: true
