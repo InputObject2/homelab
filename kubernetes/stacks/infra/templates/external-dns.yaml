@@ -19,7 +19,7 @@ spec:
               - {{ .Values.domain }}
             extraArgs:
               - --rfc2136-host={{ .Values.externalDns.rfc2136.host | quote }}
-              - --rfc2136-port={{ .Values.externalDns.rfc2136.port | quote }}
+              - --rfc2136-port={{ .Values.externalDns.rfc2136.port }}
               - --rfc2136-zone={{ .Values.externalDns.rfc2136.zone | quote }}
               - --rfc2136-tsig-secret-alg={{ .Values.externalDns.rfc2136.tsigSecretAlg | quote }}
               - --rfc2136-tsig-keyname={{ .Values.externalDns.rfc2136.tsigKeyname | quote }}
