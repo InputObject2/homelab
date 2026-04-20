@@ -7,17 +7,15 @@ ollama:
     clean: true
     pull:
       # Fast everyday (fully GPU-resident, ~25-30 tok/s)
-      - qwen3:4b
-      - qwen3:8b
-      - llama3.2:3b
+      - qwen3.5:4b
+      - qwen3.5:9b
       # Mid-range
       - qwen3:14b
-      - cogito:8b
-      - cogito:14b
-      - glm4:9b
       # Heavy reasoning/coding (slow, partially CPU-offloaded)
+      - qwen3.6:35b
       - qwen3:30b-a3b
       - qwen3-coder:30b
+      - qwen3.5:27b
       - gemma3:27b
       # Reasoning (English-focused)
       - deepseek-r1:7b
@@ -27,33 +25,21 @@ ollama:
       - nomic-embed-text
 
 image:
-  repository: intelanalytics/ipex-llm-inference-cpp-xpu
-  tag: 2.3.0-SNAPSHOT
-
-extraArgs:
-  - /bin/bash
-  - -c
-  - |
-    mkdir -p /llm/ollama
-    cd /llm/ollama
-    init-ollama
-    ln -sf /llm/ollama/ollama /bin/ollama
-    exec ./ollama serve
+  repository: ollama/ollama
+  tag: 0.21.0
 
 extraEnv:
-  # --- GPU settings for ARC (Level Zero/SYCL via IPEX) ---
+  # --- GPU ---
   - name: OLLAMA_NUM_GPU
     value: "999"
-  - name: ZES_ENABLE_SYSMAN
-    value: "1"
-  - name: OLLAMA_INTEL_GPU
+  - name: OLLAMA_VULKAN
     value: "1"
 
   # --- Memory ---
   - name: OLLAMA_CONTEXT_LENGTH
     value: "16384"
   - name: OLLAMA_FLASH_ATTENTION
-    value: "0"
+    value: "1"
   - name: OLLAMA_GPU_OVERHEAD
     value: "536870912"
 
@@ -61,7 +47,7 @@ extraEnv:
   - name: OLLAMA_KEEP_ALIVE
     value: "5m"
   - name: OLLAMA_MAX_LOADED_MODELS
-    value: "2" # thinking model+websearch with qwen3:4b
+    value: "2"
   - name: OLLAMA_NUM_PARALLEL
     value: "1"
 
@@ -98,6 +84,9 @@ extraObjects:
         storage: 200Gi
       accessModes:
         - ReadWriteMany
+      # We're using hostPath over the nfs shares here
+      # because loading a multi-gigabyte model over the
+      # network is very slow compared to local nvme storage.
       hostPath:
         path: /mnt/ollama
         type: DirectoryOrCreate
