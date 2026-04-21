@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+controllers:
+  main:
+    type: deployment
+    replicas: 1
+    strategy: Recreate
+
+    containers:
+      main:
+        image:
+          repository: ghcr.io/ggml-org/llama.cpp
+          tag: server-vulkan-b8882
+        args:
+          - -m
+          - /models/gguf/Qwen_Qwen3.6-35B-A3B-Q2_K.gguf # or Qwen_Qwen3-14B-Q4_K_M.gguf
+          - --ctx-size
+          - "16384"
+          - --n-gpu-layers
+          - "99"
+          - --host
+          - "0.0.0.0"
+          - --port
+          - "8080"
+          - --log-prefix
+          - --no-warmup
+          - --parallel
+          - "1"
+          - --verbose
+        env:
+          - name: GGML_VULKAN_DEVICE
+            value: "0"
+          #- name: ONEAPI_DEVICE_SELECTOR
+          #  value: "level_zero:0"
+          #- name: SYCL_CACHE_PERSISTENT
+          #  value: "1"
+          #- name: GGML_SYCL_DISABLE_OPT
+          #  value: "0"
+          #- name: ZES_ENABLE_SYSMAN
+          #  value: "1"
+          #- name: LLAMA_ARG_FLASH_ATTN
+          #  value: "off"
+        resources:
+          limits:
+            gpu.intel.com/i915: "1"
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: 8080
+              initialDelaySeconds: 300
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 10
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: 8080
+              initialDelaySeconds: 60
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 30
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+persistence:
+  models:
+    enabled: true
+    existingClaim: ollama-models-hostpath
+    advancedMounts:
+      main:
+        main:
+          - path: /models
+
+defaultPodOptions:
+  tolerations:
+    - key: gpu.intel.com/i915
+      operator: Exists
+      effect: NoSchedule

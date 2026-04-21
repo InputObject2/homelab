@@ -24,6 +24,8 @@ ollama:
       - deepseek-ocr:3b
       - nomic-embed-text
 
+replicaCount: 0
+
 image:
   repository: ollama/ollama
   tag: 0.21.0-extra
