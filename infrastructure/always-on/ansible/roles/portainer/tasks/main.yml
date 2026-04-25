@@ -32,6 +32,7 @@
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
+      - /opt/secrets:/opt/secrets:ro
     env:
       AGENT_PORT: "9001"
       EDGE: "0"
