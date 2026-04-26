@@ -35,6 +35,8 @@ controllers:
           - --parallel
           - "1"
           - --verbose
+          - --chat-template-kwargs
+          - '{"enable_thinking":false}'
         env:
           - name: GGML_VULKAN_DEVICE
             value: "0"
