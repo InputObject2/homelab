@@ -12,14 +12,22 @@ controllers:
           tag: server-vulkan-b8882
         args:
           - -m
-          - /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
-          #- /models/gguf/Qwen_Qwen3.6-35B-A3B-Q2_K.gguf # or Qwen_Qwen3-14B-Q4_K_M.gguf
+          #- /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
+          #- /models/gguf/Qwen_Qwen3.6-35B-A3B-Q2_K.gguf
+          - /models/gguf/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
+          #- /models/gguf/Qwen_Qwen3-14B-Q4_K_M.gguf
           - --ctx-size
-          - "16384"
-          - --n-gpu-layers
-          - "99"
+          - "32768"
+          #- --n-gpu-layers
+          #- "40"
+          - --n-cpu-moe
+          - "15"
           - --host
           - "0.0.0.0"
+          - --cache-type
+          - q8_0
+          - --cache-type-v
+          - q8_0
           - --port
           - "8080"
           - --log-prefix
