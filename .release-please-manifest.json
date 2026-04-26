@@ -4,11 +4,11 @@
   "terraform/modules/network": "0.1.0",
   "terraform/modules/xen_vm": "0.2.0",
   "kubernetes/umbrella-charts/archiveteam-warrior": "0.2.0",
-  "kubernetes/umbrella-charts/certmanager": "0.2.0",
+  "kubernetes/umbrella-charts/certmanager": "0.3.0",
   "kubernetes/umbrella-charts/democratic-csi-iscsi": "0.2.0",
   "kubernetes/umbrella-charts/external-dns": "0.2.0",
   "kubernetes/umbrella-charts/external-secrets-operator": "0.2.0",
-  "kubernetes/umbrella-charts/mealie": "0.2.0",
+  "kubernetes/umbrella-charts/mealie": "0.2.1",
   "kubernetes/umbrella-charts/metallb": "0.2.0",
   "scripts": "0.1.0"
 }
