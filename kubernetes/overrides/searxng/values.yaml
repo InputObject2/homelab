@@ -27,6 +27,16 @@ controllers:
               secretKeyRef:
                 name: searxng-secret
                 key: secret_key
+        ports:
+          - containerPort: 8080
+            name: http
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "500Mi"
+          requests:
+            cpu: "10m"
+            memory: "150Mi"
 
 service:
   main:
@@ -59,6 +69,9 @@ configMaps:
             SearxEngineTooManyRequestsException: 60
             SearxEngineAccessDeniedException: 120
 
+        general:
+          debug: true
+
         engines:
           - name: ahmia
             disabled: true
@@ -76,9 +89,13 @@ configMaps:
           - name: brave
             engine: brave
             disabled: true
+          - name: startpage
+            disabled: true
+          - name: wikipedia
+            disabled: true
           - name: mojeek
             engine: mojeek
-            disabled: false
+            disabled: true
       limiter.toml: |
         [botdetection.ip_lists]
         pass_ip = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
