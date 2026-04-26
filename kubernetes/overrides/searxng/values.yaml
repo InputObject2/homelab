@@ -55,8 +55,15 @@ configMaps:
         locale: en
         outgoing:
           request_timeout: 10.0
+          suspended_times:
+            SearxEngineTooManyRequestsException: 60
+            SearxEngineAccessDeniedException: 120
 
         engines:
+          - name: ahmia
+            disabled: true
+          - name: torch
+            disabled: true
           - name: duckduckgo
             disabled: true
           - name: google
@@ -68,7 +75,7 @@ configMaps:
             disabled: false
           - name: brave
             engine: brave
-            disabled: false
+            disabled: true
           - name: mojeek
             engine: mojeek
             disabled: false
