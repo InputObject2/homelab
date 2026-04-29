@@ -20,7 +20,7 @@ certController:
   # -- Specifies whether the cert-controller should be created.
   enabled: false
 
-logLevel: info
+logLevel: debug
 
 crds:
   enabled: true
