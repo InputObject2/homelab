@@ -6,23 +6,26 @@ democratic-csi:
 
   # add note here about volume expansion requirements
   storageClasses:
-  - name: truenas-iscsi-nas
-    defaultClass: false
-    reclaimPolicy: Delete
-    volumeBindingMode: Immediate
-    allowVolumeExpansion: true
-    parameters:
-      # for block-based storage can be ext3, ext4, xfs
-      fsType: xfs
+    - name: truenas-iscsi-nas
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        # for block-based storage can be ext3, ext4, xfs
+        fsType: xfs
+        # Disable XFS features requiring kernel >= 5.10 (inobtcount, bigtime).
+        # Nodes running Linux 5.4 cannot mount volumes formatted with these features.
+        mkfsOptions: "-m bigtime=0,inobtcount=0"
 
-    mountOptions: []
-    secrets:
-      provisioner-secret:
-      controller-publish-secret:
-      # this is set via external-secrets from Vault
-      node-stage-secret:
-      node-publish-secret:
-      controller-expand-secret:
+      mountOptions: []
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        # this is set via external-secrets from Vault
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
 
   driver:
     # this is set via external-secrets from Vault
@@ -44,9 +47,9 @@ democratic-csi:
     nodeSelector:
       node.kubernetes.io/microk8s-controlplane: microk8s-controlplane
     tolerations:
-    - key: "node-role.kubernetes.io/controlplane"
-      operator: "Exists"
-      effect: "NoSchedule"
+      - key: "node-role.kubernetes.io/controlplane"
+        operator: "Exists"
+        effect: "NoSchedule"
 
   node:
     kubeletHostPath: "/var/snap/microk8s/common/var/lib/kubelet"
