@@ -14,9 +14,6 @@ democratic-csi:
       parameters:
         # for block-based storage can be ext3, ext4, xfs
         fsType: xfs
-        # Disable XFS features requiring kernel >= 5.10 (inobtcount, bigtime).
-        # Nodes running Linux 5.4 cannot mount volumes formatted with these features.
-        mkfsOptions: "-m bigtime=0,inobtcount=0"
 
       mountOptions: []
       secrets:
@@ -43,7 +40,9 @@ democratic-csi:
         limits:
           memory: 400Mi
           cpu: 300m
-      image: docker.io/democraticcsi/democratic-csi:v1.9.5
+      image:
+        registry: docker.io/democraticcsi/democratic-csi
+        tag: v1.9.5
     nodeSelector:
       node.kubernetes.io/microk8s-controlplane: microk8s-controlplane
     tolerations:
@@ -54,7 +53,9 @@ democratic-csi:
   node:
     kubeletHostPath: "/var/snap/microk8s/common/var/lib/kubelet"
     driver:
-      image: docker.io/democraticcsi/democratic-csi:v1.9.5
+      image:
+        registry: docker.io/democraticcsi/democratic-csi
+        tag: v1.9.5
     nodeSelector:
       node.kubernetes.io/microk8s-worker: microk8s-worker
     tolerations: []
