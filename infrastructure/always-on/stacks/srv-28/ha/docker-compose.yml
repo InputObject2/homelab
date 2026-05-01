@@ -43,7 +43,7 @@ services:
       - /opt/secrets/matter-hub/matter-hub.env
 
   esphome:
-    image: ghcr.io/esphome/esphome:2026.3.1@sha256:cb9875ef7b63ecefea0e599c97981bea22e4d8ee5c822b03fbf22ccebcbbb49c
+    image: ghcr.io/esphome/esphome:2026.4.3@sha256:50073eb6ba7fad9afdd855bb41f370ba65915b4166d6d3b2f1554b478473761e
     container_name: esphome
     restart: unless-stopped
     volumes:
