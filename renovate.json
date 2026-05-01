@@ -2,10 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
 
-  "prConcurrentLimit": 5,
+  "prConcurrentLimit": 15,
   "prHourlyLimit": 2,
 
-  // <-- put it here (global behavior)
   "separateMajorMinor": true,
 
   "helmv3": {
@@ -19,7 +18,8 @@
     "enabled": true,
     "managerFilePatterns": [
       "^kubernetes\\/cluster-[^\\/]+-apps\\/.*\\.ya?ml$",
-      "^kubernetes\\/system-apps\\/.*\\.ya?ml$",
+      "^kubernetes\\/stacks\\/[^\\/]+\\/templates\\/.*\\.ya?ml$",
+      "^kubernetes\\/apps\\/templates\\/.*\\.ya?ml$",
       "^kubernetes\\/bootstrap\\/.*\\.ya?ml$"
     ]
   },

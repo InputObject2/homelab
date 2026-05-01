@@ -4,7 +4,7 @@
       "changelog-path": "CHANGELOG.md",
       "release-type": "terraform-module"
     },
-    "terraform/modules/microk8s": {
+    "terraform/modules/microk8s-cluster-networking": {
       "changelog-path": "CHANGELOG.md",
       "release-type": "terraform-module"
     },
