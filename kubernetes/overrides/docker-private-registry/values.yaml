@@ -7,7 +7,7 @@ controllers:
       main:
         image:
           repository: docker.io/library/registry
-          tag: 3.1.0
+          tag: 3.1.0@sha256:8a7c1aae9db5028cbc1cfe83e5969d270a50e8bc0b72eef3cc5657542ec383c9
         resources:
           requests:
             cpu: 10m
