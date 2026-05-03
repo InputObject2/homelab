@@ -7,7 +7,7 @@ export DEBIAN_FRONTEND=noninteractive
 # chan-sccp upstream is effectively unmaintained (last merge 2022); timspb fork includes
 # payload_mapping_tx fix for Asterisk 20+ RTP validation. Pin this SHA and do not upgrade
 # without retesting full call path (direct call, transfer, hold, MoH) on physical hardware.
-ASTERISK_VERSION="22.8.2"
+ASTERISK_VERSION="22.9.0"
 FREEPBX_VERSION="17.0"
 CHAN_SCCP_REPO="https://github.com/timspb/chan-sccp"
 CHAN_SCCP_SHA="7e05ccd82d415fb99312912760f7542a3403182d"
