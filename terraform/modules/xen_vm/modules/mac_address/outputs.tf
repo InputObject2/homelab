@@ -1,3 +1,4 @@
 output "result" {
-  value = macaddress.this.address
+  description = "The generated MAC address."
+  value       = macaddress.this.address
 }

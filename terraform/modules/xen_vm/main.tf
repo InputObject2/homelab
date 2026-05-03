@@ -19,11 +19,16 @@ module "cloud_config" {
   cloud_init_version = var.cloud_init_version
   mac_address        = var.cloud_init_version == "v1" ? "" : module.mac_address.result
 
-  extra_packages = var.extra_cloud_config_packages
-  extra_runcmd = var.extra_cloud_config_commands
+  extra_packages    = var.extra_cloud_config_packages
+  extra_runcmd      = var.extra_cloud_config_commands
   extra_write_files = var.extra_cloud_config_write_files
   override_template = var.override_cloud_config_template
-  }
+
+  auto_update_enable         = var.auto_update_enable
+  auto_update_scheduled_time = var.auto_update_scheduled_time
+
+  cloud_init_runner_config = var.cloud_init_runner_config
+}
 
 
 
@@ -64,9 +69,9 @@ module "dns_records" {
   ip_address      = module.virtual_machine.ip_address
 }
 
-locals {
-  ip_with_cidr = "${module.virtual_machine.ip_address}/${split("/",cidrsubnet(var.expected_cidr, 0, 0))[1]}"
-}
+/* locals {
+  ip_with_cidr = "${module.virtual_machine.ip_address}/${split("/", cidrsubnet(var.expected_cidr, 0, 0))[1]}"
+} */
 
 /* module "netbox_info" {
   source = "./modules/netbox"

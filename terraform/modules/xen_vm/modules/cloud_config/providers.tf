@@ -6,14 +6,6 @@ terraform {
       source  = "vatesfr/xenorchestra"
       version = "0.38.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">=3.6.3"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = ">=3.2.4"
-    }
   }
 
   required_version = ">= 1.0"

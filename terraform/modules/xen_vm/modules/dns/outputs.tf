@@ -1,23 +1,28 @@
 output "name" {
-  value = dns_a_record_set.this.name
+  description = "The DNS A record name created for the VM."
+  value       = dns_a_record_set.this.name
 }
 
 output "zone" {
-  value = dns_a_record_set.this.zone
+  description = "The DNS zone in which the A record was created."
+  value       = dns_a_record_set.this.zone
 }
 
 output "addresses" {
-  value = dns_a_record_set.this.addresses
+  description = "The IP addresses registered in the A record."
+  value       = dns_a_record_set.this.addresses
 }
-
 output "ptr_name" {
-  value = dns_ptr_record.this.name
+  description = "The last octet used as the PTR record name."
+  value       = dns_ptr_record.this.name
 }
 
 output "ptr_zone" {
-  value = dns_ptr_record.this.zone
+  description = "The reverse DNS zone the PTR record was created in."
+  value       = dns_ptr_record.this.zone
 }
 
 output "ptr" {
-  value = dns_ptr_record.this.ptr
+  description = "The PTR record value (FQDN the IP resolves to)."
+  value       = dns_ptr_record.this.ptr
 }

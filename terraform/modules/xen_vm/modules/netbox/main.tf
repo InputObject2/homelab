@@ -9,13 +9,13 @@ resource "netbox_virtual_machine" "this" {
 
   # If the plugin has a custom field for XO UUID:
   custom_fields = {
-  uuid = var.xo_vm_uuid
+    uuid = var.xo_vm_uuid
   }
 
   local_context_data = jsonencode({
-    "network-config" = var.network_config,
+    "network-config"    = var.network_config,
     "cloud-init-config" = var.cloud_config
-    })
+  })
 }
 
 resource "netbox_interface" "this" {
@@ -26,7 +26,7 @@ resource "netbox_interface" "this" {
 }
 
 resource "netbox_ip_address" "ip" {
-  virtual_machine_interface_id =  netbox_interface.this.id
-  ip_address            = var.ip_address
-  status             = "active"
+  virtual_machine_interface_id = netbox_interface.this.id
+  ip_address                   = var.ip_address
+  status                       = "active"
 }

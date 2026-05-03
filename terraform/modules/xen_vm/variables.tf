@@ -1,50 +1,64 @@
 variable "hostname" {
-  type = string
+  description = "The hostname to assign to the VM."
+  type        = string
 }
 variable "username" {
-  type    = string
-  default = "cloud-user"
+  description = "The OS user to create via cloud-init."
+  type        = string
+  default     = "cloud-user"
 }
 variable "public_ssh_key" {
-  type = string
+  description = "Public SSH key to add to the cloud-init user's authorized_keys."
+  type        = string
 }
 variable "dns_domain_name" {
-  type = string
+  description = "DNS domain used for A record creation and FQDN construction."
+  type        = string
 }
 variable "cpu_count" {
-  type    = number
-  default = 1
+  description = "Number of vCPUs to assign to the VM."
+  type        = number
+  default     = 1
 }
 variable "memory_gb" {
-  type    = number
-  default = 1
+  description = "Amount of memory in GiB to assign to the VM."
+  type        = number
+  default     = 1
 }
 variable "disk_size" {
-  type    = number
-  default = 10
+  description = "Root disk size in GiB."
+  type        = number
+  default     = 10
 }
 variable "xo_template_uuid" {
-  type = string
+  description = "UUID of the XenOrchestra VM template to clone."
+  type        = string
 }
 variable "xo_sr_id" {
-  type = string
+  description = "UUID of the XenOrchestra storage repository for the VM disk."
+  type        = string
 }
 variable "xo_network_name" {
-  type = string
+  description = "Name of the XenOrchestra network to attach the VM to."
+  type        = string
 }
 variable "xo_pool_name" {
-  type = string
+  description = "Name of the XenOrchestra pool/cluster to deploy the VM in."
+  type        = string
 }
 variable "expected_cidr" {
-  type = string
+  description = "CIDR block the VM's IP is expected to fall within (used for IP detection)."
+  type        = string
 }
 variable "start_delay" {
-  type    = number
-  default = 0
+  description = "Seconds to wait before powering on the VM after creation."
+  type        = number
+  default     = 0
 }
 variable "tags" {
-  type    = list(string)
-  default = []
+  description = "List of tags to apply to the XenOrchestra VM."
+  type        = list(string)
+  default     = []
 }
 variable "mac_prefix" {
   description = "The MAC address prefix to use for generated MAC addresses."
@@ -79,8 +93,31 @@ variable "extra_cloud_config_write_files" {
   }))
   default = []
 }
+variable "auto_update_enable" {
+  description = "Write apt unattended-upgrades config files to enable automatic updates."
+  type        = bool
+  default     = true
+}
+
+variable "auto_update_scheduled_time" {
+  description = "Time at which unattended-upgrades will reboot if required (HH:MM, 24-hour)."
+  type        = string
+  default     = "02:00"
+}
+
 variable "override_cloud_config_template" {
   description = "Override template for the cloud-config."
   type        = string
   default     = null
+}
+variable "cloud_init_runner_config" {
+  description = "When set, writes /etc/cloud-init-setup.conf for the cloud-init runner. All five fields are required; omit the variable entirely (leave null) to skip the file."
+  type = object({
+    s3_endpoint     = string
+    s3_bucket       = string
+    s3_access_key   = string
+    s3_secret_key   = string
+    discord_webhook = string
+  })
+  default = null
 }
