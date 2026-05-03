@@ -29,7 +29,7 @@ Usage: cloud-init-runner.sh [OPTIONS]
   --collect-only                 Only collect diagnostics, don't upload or notify
   --skip-collectors NAMES        Comma-separated list of collectors to skip
                                  (default: none)
-                                 Available: cloud-init, journald, dmesg, logfiles, networking,
+                                 Available: cloud-init, journald, dmesg, log-files, network,
                                             system-info, packages, disk-io
   --include-collectors NAMES     Only run specified collectors (overrides --skip-collectors)
   --skip-upload                  Don't upload logs to S3
@@ -127,8 +127,8 @@ collect_all_diagnostics() {
     "cloud-init"
     "journald"
     "dmesg"
-    "logfiles"
-    "networking"
+    "log-files"
+    "network"
     "system-info"
     "packages"
     "disk-io"
