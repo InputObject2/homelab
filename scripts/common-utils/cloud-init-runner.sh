@@ -14,7 +14,7 @@ LOG_DIR="/var/log/cloud-init-setup"
 STAGING_DIR="/tmp/cloud-init-staging-$$"
 
 # Source common utilities
-source "$SCRIPT_DIR/../lib/common.sh"
+source "$SCRIPT_DIR/lib/common.sh"
 
 # Initialize logging
 init_logging
