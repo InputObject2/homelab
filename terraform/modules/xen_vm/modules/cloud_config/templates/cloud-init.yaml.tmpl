@@ -17,6 +17,13 @@ packages:
   - ${p}
 %{ endfor ~}
 
+# Script repository configuration
+# SCRIPT_REPO_URL: URL to GitHub repository containing scripts
+# SCRIPT_REPO_BRANCH: Branch to clone (default: main)
+# SCRIPT_DOWNLOAD_DIR: Where to download scripts (default: /opt/cloud-init-scripts)
+# SCRIPT_CONFIG_URL: Optional URL to download configuration file
+# SCRIPT_CONFIG_FILE: Where to save configuration (default: /etc/cloud-init-setup.conf)
+
 write_files:
 %{ for f in write_files ~}
   - path: ${f.path}
@@ -29,3 +36,74 @@ runcmd:
 %{ for cmd in runcmd ~}
   - ${cmd}
 %{ endfor ~}
+
+  # Cloud-Init Setup Phase
+  # 1. Wait for system to stabilize
+  - sleep 5
+  - |
+    echo "=== Cloud-Init Setup Starting ===" >> /var/log/cloud-init.log
+    echo "Hostname: ${hostname}" >> /var/log/cloud-init.log
+    echo "Timestamp: $(date)" >> /var/log/cloud-init.log
+
+  # 2. Install required tools if not present
+  - if ! command -v curl >/dev/null 2>&1; then apt-get update && apt-get install -y curl || true; fi
+  - if ! command -v jq >/dev/null 2>&1; then apt-get install -y jq || true; fi
+  - |
+    if ! command -v aws >/dev/null 2>&1; then
+      curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
+      apt-get install -y unzip 2>/dev/null || true
+      unzip -q /tmp/awscliv2.zip -d /tmp/awsv2
+      /tmp/awsv2/aws/install
+      rm -rf /tmp/awscliv2.zip /tmp/awsv2
+    fi
+
+  # 3. Download and prepare setup scripts
+  - |
+    SCRIPT_REPO_URL="$${script_repo_url:-https://github.com/inputobject2/homelab.git}"
+    SCRIPT_REPO_BRANCH="$${script_repo_branch:-main}"
+    SCRIPT_DOWNLOAD_DIR="$${script_download_dir:-/opt/cloud-init-scripts}"
+
+    echo "Downloading setup scripts from $SCRIPT_REPO_URL" >> /var/log/cloud-init.log
+
+    if [ ! -d "$SCRIPT_DOWNLOAD_DIR" ]; then
+      mkdir -p "$SCRIPT_DOWNLOAD_DIR"
+      cd "$SCRIPT_DOWNLOAD_DIR"
+      git clone --depth 1 --branch "$SCRIPT_REPO_BRANCH" "$SCRIPT_REPO_URL" . 2>&1 >> /var/log/cloud-init.log || {
+        echo "Git clone failed, trying with curl..." >> /var/log/cloud-init.log
+        curl -fsSL "$(echo $SCRIPT_REPO_URL | sed 's/.git$//')/archive/$SCRIPT_REPO_BRANCH.tar.gz" | tar xz --strip=1
+      }
+    fi
+
+    # Make scripts executable
+    find "$SCRIPT_DOWNLOAD_DIR/scripts" -name "*.sh" -exec chmod +x {} \;
+    echo "Scripts prepared at: $SCRIPT_DOWNLOAD_DIR" >> /var/log/cloud-init.log
+
+  # 4. Download and prepare configuration file (if provided)
+  - |
+    SCRIPT_CONFIG_FILE="$${script_config_file:-/etc/cloud-init-setup.conf}"
+    SCRIPT_CONFIG_URL="$${script_config_url:-}"
+
+    if [ -n "$SCRIPT_CONFIG_URL" ]; then
+      echo "Downloading configuration from: $SCRIPT_CONFIG_URL" >> /var/log/cloud-init.log
+      mkdir -p "$(dirname "$SCRIPT_CONFIG_FILE")"
+      if curl -fsSL -o "$SCRIPT_CONFIG_FILE" "$SCRIPT_CONFIG_URL"; then
+        echo "Configuration downloaded successfully" >> /var/log/cloud-init.log
+      else
+        echo "WARNING: Failed to download configuration file" >> /var/log/cloud-init.log
+      fi
+    fi
+
+  # 5. Run diagnostics collection and upload
+  - |
+    SCRIPT_DOWNLOAD_DIR="$${script_download_dir:-/opt/cloud-init-scripts}"
+    if [ -f "$SCRIPT_DOWNLOAD_DIR/scripts/common-utils/cloud-init-runner.sh" ]; then
+      echo "Starting diagnostics collection and upload..." >> /var/log/cloud-init.log
+      "$SCRIPT_DOWNLOAD_DIR/scripts/common-utils/cloud-init-runner.sh" \
+        --config "$${script_config_file:-/etc/cloud-init-setup.conf}" \
+        2>&1 >> /var/log/cloud-init.log
+      RUNNER_EXIT_CODE=$?
+      echo "Diagnostics runner completed with exit code: $RUNNER_EXIT_CODE" >> /var/log/cloud-init.log
+    else
+      echo "ERROR: cloud-init-runner.sh not found" >> /var/log/cloud-init.log
+    fi
+    echo "=== Cloud-Init Setup Completed ===" >> /var/log/cloud-init.log
