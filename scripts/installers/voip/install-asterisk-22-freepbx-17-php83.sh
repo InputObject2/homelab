@@ -99,7 +99,20 @@ cd /usr/src
 wget -q "http://mirror.freepbx.org/modules/packages/freepbx/freepbx-${FREEPBX_VERSION}-latest.tgz"
 tar -xzf "freepbx-${FREEPBX_VERSION}-latest.tgz"
 cd freepbx
+# FreePBX's install script frequently exits non-zero even on success.
+# Temporarily disable set -e so it doesn't abort the rest of the installer.
+set +e
 ./install -n
+FREEPBX_EXIT=$?
+set -e
+if [[ $FREEPBX_EXIT -ne 0 ]]; then
+  echo "[!] WARNING: FreePBX installer exited with code ${FREEPBX_EXIT} — checking if fwconsole is available anyway"
+  if ! command -v fwconsole &>/dev/null; then
+    echo "[!] ERROR: fwconsole not found; FreePBX install likely failed"
+    exit 1
+  fi
+  echo "[*] fwconsole found, treating FreePBX install as successful"
+fi
 
 echo "[*] Configuring Apache/PHP"
 sed -i 's/^\(User\|Group\).*/\1 asterisk/' /etc/apache2/apache2.conf
