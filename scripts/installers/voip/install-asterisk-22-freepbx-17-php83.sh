@@ -57,8 +57,7 @@ cd "asterisk-${ASTERISK_VERSION}"
 
 echo "[*] Fetching MP3 codec and installing prereqs"
 contrib/scripts/get_mp3_source.sh
-# mysql is in add-ons
-contrib/scripts/get_addon_source.sh
+# get_addon_source.sh was removed in Asterisk 21+; res_config_mysql is now in the main tree
 contrib/scripts/install_prereq install
 
 echo "[*] Configuring Asterisk"
