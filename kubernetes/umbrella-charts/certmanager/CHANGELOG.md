@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/InputObject2/homelab/compare/certmanager-v0.2.0...certmanager-v0.3.0) (2026-05-04)
+
+
+### Features
+
+* adding self-signed CA for certmanager for internal certificates ([8a17a76](https://github.com/InputObject2/homelab/commit/8a17a76d5fc8b3845fa0858250afcdbb39bca127))
+
 ## [0.2.0](https://github.com/InputObject2/homelab/compare/certmanager-v0.1.0...certmanager-v0.2.0) (2026-01-26)
 
 
