@@ -231,6 +231,20 @@ echo "[*] Installing sccp_manager FreePBX module"
 fwconsole ma install sccp_manager
 fwconsole reload
 
+# Enable tftpd-hpa filename remapping so sccp_manager can serve per-device
+# config files from /srv/tftp/settings/ via TFTP remap rules.
+# This must run after sccp_manager install because it generates
+# /etc/asterisk/sccpManagerRewrite.rules during its install step.
+mkdir -p "${TFTP_PATH}/settings"
+chown asterisk:asterisk "${TFTP_PATH}/settings"
+cat > /etc/default/tftpd-hpa <<EOF
+TFTP_USERNAME="asterisk"
+TFTP_DIRECTORY="${TFTP_PATH}"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure --map-file /etc/asterisk/sccpManagerRewrite.rules"
+EOF
+systemctl restart tftpd-hpa
+
 echo "[*] Install complete"
 SERVER_IP=$(hostname -I | awk '{print $1}')
 echo "To access FreePBX GUI, navigate to http://${SERVER_IP}/admin and complete the web-based setup wizard."
