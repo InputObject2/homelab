@@ -33,7 +33,7 @@ apt-get install -y \
   libnewt-dev libssl-dev libncurses5-dev \
   libsqlite3-dev build-essential libjansson-dev \
   libxml2-dev libedit-dev uuid-dev subversion \
-  apache2 mariadb-server atftpd
+  apache2 mariadb-server tftpd-hpa
 
 echo "[*] Installing PHP 8.3 and FreePBX dependencies"
 # Ubuntu 24.04 ships PHP 8.3 which satisfies FreePBX 17's >= 8.2 requirement.
@@ -178,6 +178,17 @@ fi
 
 echo "[*] Configuring TFTP"
 mkdir -p "$TFTP_PATH"
+# tftpd-hpa is preferred over atftpd: it runs as a standalone daemon without
+# systemd socket activation conflicts (atftpd's DynamicUser+socket activation
+# prevents it from creating the new UDP sockets needed for TFTP data transfer).
+cat > /etc/default/tftpd-hpa <<EOF
+TFTP_USERNAME="asterisk"
+TFTP_DIRECTORY="${TFTP_PATH}"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure"
+EOF
+systemctl restart tftpd-hpa
+systemctl enable tftpd-hpa
 
 if [[ "$FETCH_FIRMWARE" -eq 1 ]]; then
   echo "[*] Fetching Cisco 7945 firmware"
@@ -216,17 +227,10 @@ chown -R asterisk:asterisk \
   /etc/asterisk /var/lib/asterisk /var/log/asterisk \
   /var/spool/asterisk /usr/lib/asterisk
 
+echo "[*] Installing sccp_manager FreePBX module"
+fwconsole ma install sccp_manager
+fwconsole reload
+
 echo "[*] Install complete"
-
-echo "To access FreePBX GUI, navigate to http://<server-ip>/admin and complete the web-based setup wizard."
-echo "To download sccp_manager: https://github.com/timspb/sccp_manager/archive/refs/tags/v17.0.1.1.tar.gz"
-
-#cd /usr/src
-#wget -q "https://github.com/timspb/sccp_manager/archive/refs/tags/v17.0.1.1.tar.gz" \
-#  -O sccp_manager-17.0.1.1.tar.gz
-#mkdir -p /var/www/html/admin/modules/sccp_manager
-#tar -xzf sccp_manager-17.0.1.1.tar.gz \
-#  --strip-components=1 \
-#  -C /var/www/html/admin/modules/sccp_manager
-#fwconsole ma install sccp_manager
-#fwconsole reload
+SERVER_IP=$(hostname -I | awk '{print $1}')
+echo "To access FreePBX GUI, navigate to http://${SERVER_IP}/admin and complete the web-based setup wizard."
