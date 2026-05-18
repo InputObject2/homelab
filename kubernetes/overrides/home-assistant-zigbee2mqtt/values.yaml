@@ -1,0 +1,139 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
+defaultPodOptions:
+  enableServiceLinks: true
+
+controllers:
+  main:
+    type: statefulset
+    replicas: 1
+    statefulset:
+      persistentVolumeClaimRetentionPolicy:
+        whenDeleted: Retain
+        whenScaled: Retain
+    containers:
+      main:
+        image:
+          repository: docker.io/koenkk/zigbee2mqtt
+          tag: 2.10.1@sha256:67c26dcf8346aced02fe1380a6afd1b57268bcef10faae3f6057c13d5d3dfa80
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: 40m
+            memory: 200Mi
+          limits:
+            cpu: 1000m
+            memory: 500Mi
+            squat.ai/cp210x: "1"
+        probes:
+          readiness:
+            enabled: false
+            custom: false
+            type: TCP
+
+ingress:
+  main:
+    enabled: false
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8080
+
+rawResources:
+  mqtt-creds:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: zigbee2mqtt-mqtt-config
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: vault-backend
+          kind: ClusterSecretStore
+        target:
+          name: zigbee2mqtt-mqtt-config
+          creationPolicy: Owner
+          template:
+            type: Opaque
+            engineVersion: v2
+            data:
+              configuration.yaml: |
+                version: 4
+                serial:
+                  port: /dev/ttyUSB0
+                  adapter: ember
+                  baudrate: 115200
+                  rtscts: false
+                advanced:
+                  log_level: info
+                  channel: 25
+                  network_key:
+                    - 86
+                    - 183
+                    - 125
+                    - 48
+                    - 129
+                    - 119
+                    - 191
+                    - 48
+                    - 141
+                    - 101
+                    - 209
+                    - 197
+                    - 66
+                    - 82
+                    - 142
+                    - 229
+                  pan_id: 49349
+                  ext_pan_id:
+                    - 180
+                    - 64
+                    - 2
+                    - 50
+                    - 92
+                    - 41
+                    - 14
+                    - 46
+                frontend:
+                  enabled: false
+                  port: 8080
+                homeassistant:
+                  enabled: true
+                permit_join: true
+
+                mqtt:
+                  base_topic: zigbee2mqtt
+                  server: "mqtt://home-assistant-mqtt:8883"
+                  user: {{ `{{ .MQTT_USERNAME }}` }}
+                  password: {{ `{{ .MQTT_PASSWORD }}` }}
+
+        data:
+          - secretKey: MQTT_PASSWORD
+            remoteRef:
+              key: apps/home-assistant/mqtt
+              property: password
+          - secretKey: MQTT_USERNAME
+            remoteRef:
+              key: apps/home-assistant/mqtt
+              property: username
+
+persistence:
+  data:
+    existingClaim: pvc-zigbee2mqtt-data
+    advancedMounts:
+      main:
+        main:
+          - path: /app/data
+  config:
+    type: secret
+    name: zigbee2mqtt-mqtt-config
+    advancedMounts:
+      main:
+        main:
+          - path: /app/data/configuration.yaml
+            subPath: configuration.yaml
+            readOnly: true

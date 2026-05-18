@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 defaultPodOptions:
   enableServiceLinks: true
 
@@ -10,18 +11,18 @@ controllers:
         whenDeleted: Retain
         whenScaled: Retain
       volumeClaimTemplates:
-      - name: data
-        globalMounts:
-          - path: /mosquitto/data
-        accessMode: ReadWriteMany
-        storageClass: truenas-nfs-nas
-        size: 2Gi
-      - name: logs
-        globalMounts:
-          - path: /mosquitto/log
-        accessMode: ReadWriteMany
-        storageClass: truenas-nfs-nas
-        size: 2Gi
+        - name: data
+          globalMounts:
+            - path: /mosquitto/data
+          accessMode: ReadWriteMany
+          storageClass: truenas-nfs-nas
+          size: 2Gi
+        - name: logs
+          globalMounts:
+            - path: /mosquitto/log
+          accessMode: ReadWriteMany
+          storageClass: truenas-nfs-nas
+          size: 2Gi
     containers:
       main:
         image:
@@ -78,14 +79,14 @@ rawResources:
               passwd: |
                 {{ `{{ .MQTT_USERNAME }}` }}:{{ `{{ .MQTT_PASSWORD }}` }}
         data:
-        - secretKey: MQTT_PASSWORD
-          remoteRef:
-            key: apps/home-assistant/mqtt
-            property: encrypted_password
-        - secretKey: MQTT_USERNAME
-          remoteRef:
-            key: apps/home-assistant/mqtt
-            property: username
+          - secretKey: MQTT_PASSWORD
+            remoteRef:
+              key: apps/home-assistant/mqtt
+              property: encrypted_password
+          - secretKey: MQTT_USERNAME
+            remoteRef:
+              key: apps/home-assistant/mqtt
+              property: username
 
   mqtt-config:
     apiVersion: v1

@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+controllers:
+  main:
+    type: deployment
+    replicas: 1
+    strategy: RollingUpdate
+    containers:
+      main:
+        image:
+          repository: ghcr.io/home-assistant/home-assistant
+          tag: 2025.11.2
+        resources:
+          requests:
+            cpu: 50m
+            memory: 1200Mi
+          limits:
+            cpu: 800m
+            memory: 1800Mi
+        probes:
+          liveness:
+            enabled: false
+          readiness:
+            enabled: false
+          startup:
+            enabled: false
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8123
+
+ingress:
+  main:
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+      external-dns.alpha.kubernetes.io/hostname: home-assistant.example.com.
+      kubernetes.io/ingress.class: nginx
+      nginx.org/websocket-services: home-assistant
+      hajimari.io/enable: "true"
+    hosts:
+      - host: home-assistant.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: tls-home-assistant
+        hosts:
+          - home-assistant.example.com
+
+persistence:
+  config:
+    existingClaim: pvc-home-assistant-nas
+    advancedMounts:
+      main:
+        main:
+          - path: /config
+  python-packages:
+    accessMode: ReadWriteMany
+    storageClass: truenas-nfs-nas
+    size: 30Gi
+    advancedMounts:
+      main:
+        main:
+          - path: /usr/local/lib/python3/site-packages
+  dockerenv-bugfix:
+    type: emptyDir
+    medium: Memory
+    advancedMounts:
+      main:
+        main:
+          - path: /config/.dockerenv
