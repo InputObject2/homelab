@@ -36,7 +36,7 @@ services:
       - loki_data:/loki
 
   influxdb:
-    image: influxdb:2.8.0@sha256:35d7c6c3be561dd602ff091b8ced714f37fbb50677283cae092662fb79e4a20f
+    image: influxdb:2.8.0@sha256:e3e7ee6476007edc0577e9114c78028112e92e48ead3545865d35187cd9a5eda
     container_name: influxdb
     restart: unless-stopped
     ports:
