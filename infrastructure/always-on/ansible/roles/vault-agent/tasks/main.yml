@@ -17,6 +17,23 @@
     mode: '0755'
   loop: "{{ host_stacks }}"
 
+- name: Create secret directories for all stacks (seed targets)
+  ansible.builtin.file:
+    path: "/opt/secrets/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ all_stacks }}"
+
+- name: Seed placeholder env files for all stacks
+  # Copies the template env file only when the destination does not yet exist.
+  # vault-agent will overwrite these with real values once it connects to Vault.
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../secrets-templates/{{ item }}/{{ item }}.env"
+    dest: "/opt/secrets/{{ item }}/{{ item }}.env"
+    mode: '0640'
+    force: no
+  loop: "{{ all_stacks }}"
+
 - name: Copy vault-agent config
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../vault-agent/config/{{ vault_agent_config }}"
