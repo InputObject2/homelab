@@ -10,6 +10,24 @@ controllers:
       persistentVolumeClaimRetentionPolicy:
         whenDeleted: Retain
         whenScaled: Retain
+    initContainers:
+      config-init:
+        image:
+          repository: docker.io/mikefarah/yq
+          tag: "4.44.3"
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            if [ ! -f /app/data/configuration.yaml ]; then
+              cp /base-config/configuration.yaml /app/data/configuration.yaml
+            fi
+            MQTT_USER=$(cat /creds/MQTT_USERNAME)
+            MQTT_PASS=$(cat /creds/MQTT_PASSWORD)
+            export MQTT_USER MQTT_PASS
+            yq -i '.mqtt.user = env(MQTT_USER) | .mqtt.password = env(MQTT_PASS)' \
+              /app/data/configuration.yaml
     containers:
       main:
         image:
@@ -43,97 +61,110 @@ service:
         port: 8080
 
 rawResources:
+  base-config:
+    apiVersion: v1
+    kind: ConfigMap
+    spec:
+      metadata:
+        name: zigbee2mqtt-base-config
+      data:
+        configuration.yaml: |
+          version: 4
+          serial:
+            port: /dev/ttyUSB0
+            adapter: ember
+            baudrate: 115200
+            rtscts: false
+          advanced:
+            log_level: info
+            channel: 25
+            network_key:
+              - 86
+              - 183
+              - 125
+              - 48
+              - 129
+              - 119
+              - 191
+              - 48
+              - 141
+              - 101
+              - 209
+              - 197
+              - 66
+              - 82
+              - 142
+              - 229
+            pan_id: 49349
+            ext_pan_id:
+              - 180
+              - 64
+              - 2
+              - 50
+              - 92
+              - 41
+              - 14
+              - 46
+          frontend:
+            enabled: true
+            package: zigbee2mqtt-windfront
+            port: 8081
+          homeassistant:
+            enabled: true
+            experimental_event_entities: true
+            legacy_action_sensor: true
+          permit_join: true
+          mqtt:
+            base_topic: zigbee2mqtt
+            server: "mqtt://home-assistant-mqtt:8883"
+            user: ""
+            password: ""
+          device_options:
+            legacy: false
   mqtt-creds:
     apiVersion: external-secrets.io/v1
     kind: ExternalSecret
     spec:
       metadata:
-        name: zigbee2mqtt-mqtt-config
+        name: zigbee2mqtt-mqtt-creds
       spec:
         refreshInterval: 1h
         secretStoreRef:
           name: vault-backend
           kind: ClusterSecretStore
         target:
-          name: zigbee2mqtt-mqtt-config
+          name: zigbee2mqtt-mqtt-creds
           creationPolicy: Owner
-          template:
-            type: Opaque
-            engineVersion: v2
-            data:
-              configuration.yaml: |
-                version: 4
-                serial:
-                  port: /dev/ttyUSB0
-                  adapter: ember
-                  baudrate: 115200
-                  rtscts: false
-                advanced:
-                  log_level: info
-                  channel: 25
-                  network_key:
-                    - 86
-                    - 183
-                    - 125
-                    - 48
-                    - 129
-                    - 119
-                    - 191
-                    - 48
-                    - 141
-                    - 101
-                    - 209
-                    - 197
-                    - 66
-                    - 82
-                    - 142
-                    - 229
-                  pan_id: 49349
-                  ext_pan_id:
-                    - 180
-                    - 64
-                    - 2
-                    - 50
-                    - 92
-                    - 41
-                    - 14
-                    - 46
-                frontend:
-                  enabled: false
-                  port: 8080
-                homeassistant:
-                  enabled: true
-                permit_join: true
-
-                mqtt:
-                  base_topic: zigbee2mqtt
-                  server: "mqtt://home-assistant-mqtt:8883"
-                  user: {{ `{{ .MQTT_USERNAME }}` }}
-                  password: {{ `{{ .MQTT_PASSWORD }}` }}
-
         data:
-          - secretKey: MQTT_PASSWORD
-            remoteRef:
-              key: apps/home-assistant/mqtt
-              property: password
           - secretKey: MQTT_USERNAME
             remoteRef:
               key: apps/home-assistant/mqtt
               property: username
+          - secretKey: MQTT_PASSWORD
+            remoteRef:
+              key: apps/home-assistant/mqtt
+              property: password
 
 persistence:
   data:
     existingClaim: pvc-zigbee2mqtt-data
     advancedMounts:
       main:
+        config-init:
+          - path: /app/data
         main:
           - path: /app/data
-  config:
-    type: secret
-    name: zigbee2mqtt-mqtt-config
+  base-config:
+    type: configMap
+    name: zigbee2mqtt-base-config
     advancedMounts:
       main:
-        main:
-          - path: /app/data/configuration.yaml
-            subPath: configuration.yaml
-            readOnly: true
+        config-init:
+          - path: /base-config
+  mqtt-creds:
+    type: secret
+    name: zigbee2mqtt-mqtt-creds
+    advancedMounts:
+      main:
+        config-init:
+          - path: /creds
