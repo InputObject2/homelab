@@ -1,9 +1,9 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 controllers:
   main:
     type: deployment
     replicas: 1
-    strategy: RollingUpdate
+    strategy: Recreate
     containers:
       main:
         image:
@@ -12,10 +12,10 @@ controllers:
         resources:
           requests:
             cpu: 50m
-            memory: 1200Mi
+            memory: 1400Mi
           limits:
-            cpu: 800m
-            memory: 1800Mi
+            cpu: 2000m
+            memory: 2400Mi
         probes:
           liveness:
             enabled: false
@@ -58,9 +58,7 @@ persistence:
         main:
           - path: /config
   python-packages:
-    accessMode: ReadWriteMany
-    storageClass: truenas-nfs-nas
-    size: 30Gi
+    existingClaim: home-assistant-python-packages
     advancedMounts:
       main:
         main:
