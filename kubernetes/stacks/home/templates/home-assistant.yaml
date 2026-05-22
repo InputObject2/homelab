@@ -23,6 +23,8 @@ spec:
             value: '{{ include "home.homeAssistant.hostname" . }}'
           - name: "ingress.main.hosts[0].host"
             value: '{{ include "home.homeAssistant.hostname" . }}'
+          - name: "service.voip.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
+            value: '{{ include "home.homeAssistantVoIP.hostname" . }}.'
     - repoURL: {{ .Values.repoURL | quote }}
       targetRevision: {{ .Values.targetRevision }}
       ref: values

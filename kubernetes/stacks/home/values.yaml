@@ -11,3 +11,6 @@ homeAssistantMqtt:
 
 homeAssistant:
   subdomain: home-assistant
+
+homeAssistantVoIP:
+  subdomain: ha-voip

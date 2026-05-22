@@ -8,3 +8,7 @@ Helpers for home stack
 {{- define "home.homeAssistant.hostname" -}}
 {{- printf "%s.%s" .Values.homeAssistant.subdomain .Values.domain }}
 {{- end }}
+
+{{- define "home.homeAssistantVoIP.hostname" -}}
+{{- printf "%s.%s" .Values.homeAssistantVoIP.subdomain .Values.domain }}
+{{- end }}

@@ -15,6 +15,13 @@ controllers:
           limits:
             cpu: 2000m
             memory: 2400Mi
+        ports:
+          - containerPort: 8123
+            name: http
+            protocol: TCP
+          - containerPort: 5060
+            name: sip
+            protocol: UDP
         probes:
           liveness:
             enabled: false
@@ -24,6 +31,15 @@ controllers:
             enabled: false
 
 service:
+  voip:
+    controller: main
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: ha-voip.example.com.
+    ports:
+      sip:
+        port: 5060
+        protocol: UDP
   main:
     controller: main
     ports:
@@ -44,6 +60,10 @@ ingress:
         paths:
           - path: /
             pathType: Prefix
+            service:
+              identifier: main
+              port: http
+
     tls:
       - secretName: tls-home-assistant
         hosts:
