@@ -1,4 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
 controllers:
   main:
     type: statefulset
@@ -29,6 +36,11 @@ controllers:
             enabled: false
           startup:
             enabled: false
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
 
 service:
   voip:
@@ -90,4 +102,99 @@ persistence:
         main:
           - path: /config/.dockerenv
 
-rawResources: {}
+rawResources:
+  # Namespace-wide baseline policies — apply to all pods in the home-assistant namespace
+  netpol-deny-all:
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    spec:
+      metadata:
+        name: deny-all
+      spec:
+        podSelector: {}
+        policyTypes:
+          - Ingress
+          - Egress
+
+  netpol-allow-dns:
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    spec:
+      metadata:
+        name: allow-dns
+      spec:
+        podSelector: {}
+        policyTypes:
+          - Egress
+        egress:
+          - to:
+              - namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: kube-system
+                podSelector:
+                  matchLabels:
+                    k8s-app: kube-dns
+            ports:
+              - port: 53
+                protocol: UDP
+              - port: 53
+                protocol: TCP
+
+  netpol-allow-ha:
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    spec:
+      metadata:
+        name: allow-home-assistant
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: home-assistant
+        policyTypes:
+          - Ingress
+          - Egress
+        ingress:
+          - from:
+              - namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: kube-system
+                podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: nginx-ingress-controller
+            ports:
+              - port: 8123
+                protocol: TCP
+          # VoIP SIP — LoadBalancer; source is SNAT'd node IP, allow from anywhere
+          - ports:
+              - port: 5060
+                protocol: UDP
+        egress:
+          - to:
+              - podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: home-assistant-mqtt
+            ports:
+              - port: 1883
+                protocol: TCP
+          # internet (non-RFC1918)
+          - to:
+              - ipBlock:
+                  cidr: 0.0.0.0/0
+                  except:
+                    - 10.0.0.0/8
+                    - 172.16.0.0/12
+                    - 192.168.0.0/16
+                    - 100.64.0.0/10  # CGNAT range
+          # home network devices on 10.x — exclude pod CIDR and service CIDR
+          - to:
+              - ipBlock:
+                  cidr: 10.0.0.0/8
+                  except:
+                    - 10.1.0.0/16      # Calico pod CIDR
+                    - 10.152.183.0/24  # MicroK8s service CIDR
+          - to:
+              - ipBlock:
+                  cidr: 172.16.0.0/12
+          - to:
+              - ipBlock:
+                  cidr: 192.168.0.0/16

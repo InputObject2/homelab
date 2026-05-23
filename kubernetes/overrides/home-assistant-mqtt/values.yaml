@@ -1,6 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 defaultPodOptions:
-  enableServiceLinks: true
+  enableServiceLinks: false
+  automountServiceAccountToken: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
 
 controllers:
   main:
@@ -27,7 +31,7 @@ controllers:
       main:
         image:
           repository: library/eclipse-mosquitto
-          tag: 2.0.22
+          tag: 2.0.22@sha256:914f529386804c8278a4e581526b9be5e1604df44b30daabc70aa97dcefe5268
         resources:
           requests:
             cpu: 40m
@@ -35,6 +39,21 @@ controllers:
           limits:
             cpu: 1000m
             memory: 500Mi
+        ports:
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
+          - containerPort: 8883
+            name: mqtt-tls
+            protocol: TCP
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1883
+          runAsGroup: 1883
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         probes:
           readiness:
             enabled: false
@@ -58,10 +77,33 @@ service:
         port: 8883
 
 rawResources:
+  netpol-allow-mqtt-broker:
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    spec:
+      metadata:
+        name: allow-mqtt-broker
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: home-assistant-mqtt
+        policyTypes:
+          - Ingress
+        ingress:
+          # allow from all sources on MQTT ports — both in-cluster clients (HA, z2m)
+          # and external clients arriving via the LoadBalancer (SNAT hides original IP)
+          - ports:
+              - port: 1883
+                protocol: TCP
+              - port: 8883
+                protocol: TCP
+
   mqtt-creds:
     apiVersion: external-secrets.io/v1
     kind: ExternalSecret
+    # this is the rawResource spec
     spec:
+      # this is the actual externalsecret object
       metadata:
         name: mqtt-credentials
       spec:

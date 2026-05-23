@@ -1,6 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 defaultPodOptions:
-  enableServiceLinks: true
+  enableServiceLinks: false
+  automountServiceAccountToken: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
 
 controllers:
   main:
@@ -14,27 +18,58 @@ controllers:
       config-init:
         image:
           repository: docker.io/mikefarah/yq
-          tag: "4.44.3"
+          tag: "4.44.3@sha256:5b3d851bf28b04ef902fee86305f4dd7e063919c1cafedab2042adb16221c025"
         command:
           - /bin/sh
           - -c
         args:
           - |
+            echo "Initialzing configuration.yaml with MQTT credentials from ExternalSecret"
+
             if [ ! -f /app/data/configuration.yaml ]; then
+              echo "Setting up configuration.yaml for the first time"
               cp /base-config/configuration.yaml /app/data/configuration.yaml
             fi
             MQTT_USER=$(cat /creds/MQTT_USERNAME)
             MQTT_PASS=$(cat /creds/MQTT_PASSWORD)
             export MQTT_USER MQTT_PASS
-            yq -i '.mqtt.user = env(MQTT_USER) | .mqtt.password = env(MQTT_PASS)' \
-              /app/data/configuration.yaml
+
+            echo "Inputting MQTT credentials into configuration.yaml"
+            yq '.mqtt.user = env(MQTT_USER) | .mqtt.password = env(MQTT_PASS)' \
+              /app/data/configuration.yaml > /tmp/configuration.yaml
+
+            echo "Replacing configuration.yaml with new version containing MQTT credentials"
+            rm /app/data/configuration.yaml
+            mv /tmp/configuration.yaml /app/data/configuration.yaml
+
+            echo "Configuration after init container:"
+            cat /app/data/configuration.yaml
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
     containers:
       main:
         image:
           repository: docker.io/koenkk/zigbee2mqtt
           tag: 2.10.1@sha256:67c26dcf8346aced02fe1380a6afd1b57268bcef10faae3f6057c13d5d3dfa80
+        ports:
+          - containerPort: 8081
+            name: frontend
+            protocol: TCP
         securityContext:
-          privileged: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         resources:
           requests:
             cpu: 40m
@@ -144,6 +179,27 @@ rawResources:
             remoteRef:
               key: apps/home-assistant/mqtt
               property: password
+
+  netpol-allow-zigbee2mqtt:
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    spec:
+      metadata:
+        name: allow-zigbee2mqtt
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: home-assistant-zigbee2mqtt
+        policyTypes:
+          - Egress
+        egress:
+          - to:
+              - podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: home-assistant-mqtt
+            ports:
+              - port: 1883
+                protocol: TCP
 
 persistence:
   data:
