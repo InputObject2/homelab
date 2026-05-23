@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 defaultPodOptions:
   enableServiceLinks: true
 
@@ -10,24 +11,24 @@ controllers:
         whenDeleted: Retain
         whenScaled: Retain
       volumeClaimTemplates:
-      - name: config
-        globalMounts:
-          - path: /var/lib/xo-server
-        accessMode: ReadWriteOnce
-        storageClass: truenas-nfs-nas
-        size: 2Gi
-      - name: backups
-        globalMounts:
-          - path: /mnt/backups
-        accessMode: ReadWriteMany
-        storageClass: truenas-nfs-nas
-        size: 200Gi
-      - name: redis
-        globalMounts:
-          - path: /var/lib/redis
-        accessMode: ReadWriteOnce
-        storageClass: truenas-nfs-nas
-        size: 1Gi
+        - name: config
+          globalMounts:
+            - path: /var/lib/xo-server
+          accessMode: ReadWriteOnce
+          storageClass: truenas-nfs-nas
+          size: 2Gi
+        - name: backups
+          globalMounts:
+            - path: /mnt/backups
+          accessMode: ReadWriteMany
+          storageClass: truenas-nfs-nas
+          size: 200Gi
+        - name: redis
+          globalMounts:
+            - path: /var/lib/redis
+          accessMode: ReadWriteOnce
+          storageClass: truenas-nfs-nas
+          size: 1Gi
     containers:
       main:
         nameOverride: xen-orchestra
@@ -75,11 +76,11 @@ ingress:
     hosts:
       - host: test.com
         paths:
-        - path: /
-          pathType: Prefix
+          - path: /
+            pathType: Prefix
     tls:
       - hosts:
-        - test.com
+          - test.com
         secretName: tls-xoa
 
 service:

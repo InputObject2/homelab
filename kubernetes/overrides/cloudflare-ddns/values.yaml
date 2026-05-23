@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 controllers:
   main:
     type: deployment
@@ -84,11 +85,11 @@ rawResources:
                 "ttl": 300
                 }
         data:
-        - secretKey: CLOUDFLARE_API_TOKEN
-          remoteRef:
-            key: apps/cloudflare-ddns
-            property: api_token
-        - secretKey: CLOUDFLARE_ZONE_ID
-          remoteRef:
-            key: apps/cloudflare-ddns
-            property: zone_id
+          - secretKey: CLOUDFLARE_API_TOKEN
+            remoteRef:
+              key: apps/cloudflare-ddns
+              property: api_token
+          - secretKey: CLOUDFLARE_ZONE_ID
+            remoteRef:
+              key: apps/cloudflare-ddns
+              property: zone_id

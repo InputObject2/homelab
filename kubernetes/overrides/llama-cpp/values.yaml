@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 controllers:
   main:
     type: deployment
@@ -12,14 +12,14 @@ controllers:
           tag: server-vulkan-b8882
         args:
           - -m
-          #- /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
-          #- /models/gguf/Qwen_Qwen3.6-35B-A3B-Q2_K.gguf
+          # - /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
+          # - /models/gguf/Qwen_Qwen3.6-35B-A3B-Q2_K.gguf
           - /models/gguf/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
-          #- /models/gguf/Qwen_Qwen3-14B-Q4_K_M.gguf
+          # - /models/gguf/Qwen_Qwen3-14B-Q4_K_M.gguf
           - --ctx-size
           - "65536"
-          #- --n-gpu-layers
-          #- "40"
+          # - --n-gpu-layers
+          # - "40"
           - --n-cpu-moe
           - "15"
           - --host
@@ -40,16 +40,16 @@ controllers:
         env:
           - name: GGML_VULKAN_DEVICE
             value: "0"
-          #- name: ONEAPI_DEVICE_SELECTOR
-          #  value: "level_zero:0"
-          #- name: SYCL_CACHE_PERSISTENT
-          #  value: "1"
-          #- name: GGML_SYCL_DISABLE_OPT
-          #  value: "0"
-          #- name: ZES_ENABLE_SYSMAN
-          #  value: "1"
-          #- name: LLAMA_ARG_FLASH_ATTN
-          #  value: "off"
+          # - name: ONEAPI_DEVICE_SELECTOR
+          #   value: "level_zero:0"
+          # - name: SYCL_CACHE_PERSISTENT
+          #   value: "1"
+          # - name: GGML_SYCL_DISABLE_OPT
+          #   value: "0"
+          # - name: ZES_ENABLE_SYSMAN
+          #   value: "1"
+          # - name: LLAMA_ARG_FLASH_ATTN
+          #   value: "off"
         resources:
           limits:
             gpu.intel.com/i915: "1"

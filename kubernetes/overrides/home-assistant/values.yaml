@@ -89,3 +89,5 @@ persistence:
       main:
         main:
           - path: /config/.dockerenv
+
+rawResources: {}

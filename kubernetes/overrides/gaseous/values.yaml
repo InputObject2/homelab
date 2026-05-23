@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
 controllers:
   main:
     type: deployment
@@ -126,15 +126,15 @@ persistence:
       main:
         main:
           - path: "/home/gaseous/.gaseous-server/Data/Import"
-  #upload:
-  #  enabled: true
-  #  accessMode: ReadWriteMany
-  #  storageClass: truenas-nfs-nas
-  #  size: 100Gi
-  #  advancedMounts:
-  #    main:
-  #      main:
-  #        - path: "/home/gaseous/.gaseous-server/Data/Upload"
+  # upload:
+  #   enabled: true
+  #   accessMode: ReadWriteMany
+  #   storageClass: truenas-nfs-nas
+  #   size: 100Gi
+  #   advancedMounts:
+  #     main:
+  #       main:
+  #         - path: "/home/gaseous/.gaseous-server/Data/Upload"
   downloads:
     enabled: true
     existingClaim: dfs-media-gaseous
@@ -389,5 +389,3 @@ rawResources:
           creationPolicy: Owner
           deletionPolicy: Retain
           name: gaseous-oidc-creds
-
-
