@@ -1,0 +1,15 @@
+# rsyncd.conf managed by Ansible — deployed on primary DC only
+uid = root
+gid = root
+use chroot = yes
+read only = yes
+log file = /var/log/rsyncd.log
+pid file = /var/run/rsyncd.pid
+
+[sysvol]
+    comment = SYSVOL replication
+    path = /var/lib/samba/sysvol
+    read only = yes
+    hosts allow = {{ dc_peer_ip }}
+    auth users = rsync
+    secrets file = /etc/rsyncd.secrets

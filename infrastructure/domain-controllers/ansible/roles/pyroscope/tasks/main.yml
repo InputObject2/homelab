@@ -1,0 +1,58 @@
+---
+- name: Allow Pyroscope UI/API port through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ pyroscope_http_port | string }}"
+    proto: tcp
+
+- name: Create pyroscope system user
+  ansible.builtin.user:
+    name: pyroscope
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Create pyroscope data directory
+  ansible.builtin.file:
+    path: "{{ pyroscope_data_dir }}"
+    state: directory
+    owner: pyroscope
+    group: pyroscope
+    mode: "0755"
+
+- name: Download pyroscope binary archive
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/grafana/pyroscope/releases/download/v{{ pyroscope_version }}/pyroscope_{{ pyroscope_version }}_{{ pyroscope_arch }}.tar.gz
+    dest: /tmp/pyroscope-{{ pyroscope_version }}.tar.gz
+    mode: "0644"
+    timeout: 60
+
+- name: Extract pyroscope binaries
+  ansible.builtin.unarchive:
+    src: /tmp/pyroscope-{{ pyroscope_version }}.tar.gz
+    dest: /usr/local/bin/
+    remote_src: true
+    include:
+      - pyroscope
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Template pyroscope systemd service
+  ansible.builtin.template:
+    src: pyroscope.service.j2
+    dest: /etc/systemd/system/pyroscope.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart pyroscope
+
+- name: Enable and start pyroscope
+  ansible.builtin.systemd:
+    name: pyroscope
+    enabled: true
+    state: started
+    daemon_reload: true

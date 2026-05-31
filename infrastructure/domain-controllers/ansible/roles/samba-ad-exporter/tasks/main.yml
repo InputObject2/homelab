@@ -1,0 +1,59 @@
+---
+- name: Allow samba-ad-exporter port through UFW
+  community.general.ufw:
+    rule: allow
+    port: "9101"
+    proto: tcp
+
+- name: Install python3-venv and python3-pip
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+
+- name: Create samba-ad-exporter directory
+  ansible.builtin.file:
+    path: /opt/samba-ad-exporter
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create Python virtualenv
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/samba-ad-exporter/venv
+    creates: /opt/samba-ad-exporter/venv/bin/python
+
+- name: Install prometheus_client into virtualenv
+  ansible.builtin.pip:
+    name: prometheus_client
+    virtualenv: /opt/samba-ad-exporter/venv
+    state: present
+
+- name: Copy samba_ad_exporter.py
+  ansible.builtin.copy:
+    src: samba_ad_exporter.py
+    dest: /opt/samba-ad-exporter/samba_ad_exporter.py
+    owner: root
+    group: root
+    mode: "0755"
+  notify: restart samba-ad-exporter
+
+- name: Template samba-ad-exporter systemd service
+  ansible.builtin.template:
+    src: samba-ad-exporter.service.j2
+    dest: /etc/systemd/system/samba-ad-exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart samba-ad-exporter
+
+- name: Enable and start samba-ad-exporter
+  ansible.builtin.systemd:
+    name: samba-ad-exporter
+    enabled: true
+    state: started
+    daemon_reload: true

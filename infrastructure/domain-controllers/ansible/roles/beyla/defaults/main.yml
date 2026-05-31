@@ -1,0 +1,9 @@
+---
+beyla_version: "v3.15.0"
+beyla_arch: "linux-amd64"
+beyla_otlp_endpoint: ""
+beyla_otlp_protocol: "http/protobuf"
+beyla_otlp_headers: ""
+beyla_executable_name: "samba"
+beyla_service_name: "samba-ad"
+beyla_trace_printer: "text"

@@ -1,0 +1,11 @@
+---
+- name: Apply domain controller configuration
+  hosts: domain_controllers
+  become: true
+  roles:
+    - common
+    - samba-dc
+    - node-exporter
+    - samba-ad-exporter
+    - beyla
+    - pyroscope

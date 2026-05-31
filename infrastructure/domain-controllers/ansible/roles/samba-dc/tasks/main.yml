@@ -1,0 +1,256 @@
+---
+# Install required packages (state: present — never upgrade automatically)
+- name: Install Samba and related packages
+  ansible.builtin.apt:
+    name: "{{ samba_packages }}"
+    state: present
+    update_cache: true
+
+# ---- Mask legacy daemons (managed internally by samba-ad-dc) ----------------
+
+- name: Mask smbd, nmbd, and winbind (not used on AD DC)
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: true
+  loop:
+    - smbd
+    - nmbd
+    - winbind
+
+# ---- Configuration templates ------------------------------------------------
+
+- name: Template smb.conf
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "testparm -s %s"
+  notify: restart samba-ad-dc
+
+- name: Template chrony.conf
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart chrony
+
+# ---- rsyncd (primary DC only — exposes sysvol for DC2 to pull) --------------
+
+- name: Template rsyncd.conf (primary DC only)
+  ansible.builtin.template:
+    src: rsyncd.conf.j2
+    dest: /etc/rsyncd.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: dc_role == "primary"
+  notify: restart rsync
+
+- name: Ensure rsyncd secrets file exists with correct permissions (primary DC)
+  ansible.builtin.file:
+    path: /etc/rsyncd.secrets
+    state: touch
+    owner: root
+    group: root
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  when: dc_role == "primary"
+
+- name: Enable rsyncd service (primary DC)
+  ansible.builtin.systemd:
+    name: rsync
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: dc_role == "primary"
+
+- name: Disable rsyncd service (additional DC — not needed)
+  ansible.builtin.systemd:
+    name: rsync
+    enabled: false
+    state: stopped
+  when: dc_role == "additional"
+  failed_when: false
+
+# ---- Sysvol rsync cron (DC2 only) ------------------------------------------
+
+- name: Ensure sysvol-rsync cron job exists (additional DC pulls from primary)
+  ansible.builtin.cron:
+    name: samba-sysvol-rsync
+    cron_file: samba-sysvol-rsync
+    user: root
+    minute: "*/5"
+    job: >-
+      rsync -az --delete --password-file=/etc/rsyncd.client.secret
+      rsync://rsync@{{ smb_primary_host }}.{{ dc_dns_domain_effective }}/sysvol /var/lib/samba/sysvol/
+      >> /var/log/sysvol-rsync.log 2>&1
+  when: dc_role == "additional"
+
+- name: Ensure rsync client secret file exists with correct permissions (additional DC)
+  ansible.builtin.file:
+    path: /etc/rsyncd.client.secret
+    state: touch
+    owner: root
+    group: root
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  when: dc_role == "additional"
+
+# ---- Samba AD backup to S3 (primary DC only) -------------------------------
+
+- name: Ensure Samba AD backup working directory exists (primary DC)
+  ansible.builtin.file:
+    path: /var/backups/samba-ad
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: dc_role == "primary"
+
+- name: Ensure Samba AD backup env file exists with correct permissions (primary DC)
+  ansible.builtin.file:
+    path: /etc/default/samba-ad-backup
+    state: touch
+    owner: root
+    group: root
+    mode: "0600"
+    modification_time: preserve
+    access_time: preserve
+  when: dc_role == "primary"
+
+- name: Check whether AWS CLI is already installed (primary DC)
+  ansible.builtin.command: command -v aws
+  register: aws_cli_check
+  changed_when: false
+  failed_when: false
+  when: dc_role == "primary"
+
+- name: Install AWS CLI from apt (primary DC)
+  ansible.builtin.apt:
+    name: awscli
+    state: present
+    update_cache: true
+  register: aws_cli_apt
+  failed_when: false
+  when:
+    - dc_role == "primary"
+    - aws_cli_check.rc != 0
+
+- name: Refresh AWS CLI check after apt install attempt (primary DC)
+  ansible.builtin.command: command -v aws
+  register: aws_cli_check_after_apt
+  changed_when: false
+  failed_when: false
+  when:
+    - dc_role == "primary"
+    - aws_cli_check.rc != 0
+
+- name: Download AWS CLI v2 archive (primary DC fallback)
+  ansible.builtin.get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: "0644"
+  when:
+    - dc_role == "primary"
+    - aws_cli_check.rc != 0
+    - aws_cli_check_after_apt.rc != 0
+
+- name: Extract AWS CLI v2 archive (primary DC fallback)
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp/
+    remote_src: true
+  when:
+    - dc_role == "primary"
+    - aws_cli_check.rc != 0
+    - aws_cli_check_after_apt.rc != 0
+
+- name: Install AWS CLI v2 (primary DC fallback)
+  ansible.builtin.command:
+    cmd: /tmp/aws/install --update
+  args:
+    creates: /usr/local/bin/aws
+  when:
+    - dc_role == "primary"
+    - aws_cli_check.rc != 0
+    - aws_cli_check_after_apt.rc != 0
+
+- name: Install Samba AD backup script (primary DC)
+  ansible.builtin.template:
+    src: samba-ad-backup.sh.j2
+    dest: /usr/local/sbin/samba-ad-backup.sh
+    owner: root
+    group: root
+    mode: "0750"
+  when: dc_role == "primary"
+
+- name: Configure Samba AD backup cron job (primary DC)
+  ansible.builtin.cron:
+    name: samba-ad-backup
+    cron_file: samba-ad-backup
+    user: root
+    minute: "{{ samba_ad_backup_minute }}"
+    hour: "{{ samba_ad_backup_hour }}"
+    job: >-
+      flock -n /var/run/samba-ad-backup.lock /usr/local/sbin/samba-ad-backup.sh
+      >> /var/log/samba-ad-backup.log 2>&1
+  when: dc_role == "primary"
+
+- name: Remove Samba AD backup cron job from additional DCs
+  ansible.builtin.cron:
+    name: samba-ad-backup
+    cron_file: samba-ad-backup
+    state: absent
+  when: dc_role == "additional"
+
+# ---- Remove stale sysvol rsync cron from primary DC -------------------------
+# DC1 was incorrectly pulling from a decommissioned third DC (us20-dc-95833).
+# DC1 is authoritative and must not pull sysvol from anywhere.
+
+- name: Remove stale sysvol rsync cron from primary DC
+  ansible.builtin.cron:
+    name: samba-sysvol-rsync
+    cron_file: samba-sysvol-rsync
+    state: absent
+  when: dc_role == "primary"
+
+- name: Remove any legacy sysvol rsync cron entries from root crontab (primary DC)
+  ansible.builtin.lineinfile:
+    path: /var/spool/cron/crontabs/root
+    regexp: "sysvol.*rsync|rsync.*sysvol"
+    state: absent
+  when: dc_role == "primary"
+  failed_when: false
+
+# ---- UFW rules --------------------------------------------------------------
+
+- name: Allow Samba AD ports through UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    - {port: "53", proto: "tcp"}
+    - {port: "53", proto: "udp"}
+    - {port: "88", proto: "tcp"}
+    - {port: "88", proto: "udp"}
+    - {port: "389", proto: "tcp"}
+    - {port: "445", proto: "tcp"}
+    - {port: "464", proto: "tcp"}
+    - {port: "636", proto: "tcp"}
+    - {port: "3268", proto: "tcp"}
+    - {port: "3269", proto: "tcp"}
+
+- name: Allow rsyncd port through UFW (primary DC)
+  community.general.ufw:
+    rule: allow
+    port: "873"
+    proto: tcp
+    src: "{{ dc_peer_ip }}"
+  when: dc_role == "primary"

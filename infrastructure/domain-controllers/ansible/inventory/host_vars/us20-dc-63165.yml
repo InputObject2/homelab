@@ -1,0 +1,6 @@
+---
+dc_role: primary
+smb_netbios_name: US20-DC-63165
+chrony_ntp_server: "ca.pool.ntp.org"
+dc_peer_ip: "10.222.0.19"
+vault_agent_config: "dc-1.hcl"

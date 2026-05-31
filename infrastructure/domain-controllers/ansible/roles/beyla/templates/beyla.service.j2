@@ -1,0 +1,28 @@
+[Unit]
+Description=Grafana Beyla eBPF Auto-Instrumentation
+Documentation=https://grafana.com/oss/beyla-ebpf/
+After=network-online.target samba-ad-dc.service
+Wants=network-online.target samba-ad-dc.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/beyla
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment=BEYLA_TRACE_PRINTER={{ beyla_trace_printer }}
+Environment=BEYLA_EXECUTABLE_NAME={{ beyla_executable_name }}
+Environment=OTEL_SERVICE_NAME={{ beyla_service_name }}
+{% if beyla_otlp_endpoint | default('') | length > 0 %}
+Environment=OTEL_EXPORTER_OTLP_PROTOCOL={{ beyla_otlp_protocol }}
+Environment=OTEL_EXPORTER_OTLP_ENDPOINT={{ beyla_otlp_endpoint }}
+{% if beyla_otlp_headers | default('') | length > 0 %}
+Environment=OTEL_EXPORTER_OTLP_HEADERS={{ beyla_otlp_headers }}
+{% endif %}
+{% endif %}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,226 @@
+---
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - ansible
+      - curl
+      - wget
+      - gnupg
+      - ca-certificates
+      - python3-hvac
+      - ufw
+      - rsync
+      - unzip
+    state: present
+    update_cache: true
+
+- name: Add HashiCorp apt signing key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: "0644"
+
+- name: Add HashiCorp apt repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc]
+      https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main
+    state: present
+
+- name: Install vault
+  ansible.builtin.apt:
+    name: vault
+    state: present
+    update_cache: true
+
+- name: Harden SSH — disable password auth and root login
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/90-hardening.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+    mode: "0644"
+    owner: root
+    group: root
+  notify: restart ssh
+
+- name: Allow SSH through UFW
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+    default: deny
+    direction: incoming
+
+- name: Resolve effective domain and vault settings
+  ansible.builtin.set_fact:
+    dc_vault_addr_effective: >-
+      {{ vault_addr | default((ansible_local | default({})).get('domain_controller', {}).get('vault_addr', ''), true) }}
+    dc_dns_domain_effective: >-
+      {{ (smb_dns_domain | default((ansible_local | default({})).get('domain_controller', {}).get('smb_dns_domain', ''), true)) | lower }}
+    dc_realm_effective: >-
+      {{ (smb_realm | default((ansible_local | default({})).get('domain_controller', {}).get('smb_realm', ''), true)) | upper }}
+    dc_workgroup_effective: >-
+      {{ (smb_workgroup | default((ansible_local | default({})).get('domain_controller', {}).get('smb_workgroup', ''), true)) | upper }}
+
+- name: Assert required domain and vault settings are available
+  ansible.builtin.assert:
+    that:
+      - dc_vault_addr_effective | length > 0
+      - dc_dns_domain_effective | length > 0
+      - dc_realm_effective | length > 0
+      - dc_workgroup_effective | length > 0
+    fail_msg: >-
+      Missing required settings. Run bootstrap with extra vars for vault_addr,
+      smb_dns_domain, smb_realm, and smb_workgroup to seed host facts.
+
+- name: Ensure local facts directory exists
+  ansible.builtin.file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Persist domain controller settings as host-local facts
+  ansible.builtin.copy:
+    dest: /etc/ansible/facts.d/domain_controller.fact
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      {
+        "vault_addr": "{{ dc_vault_addr_effective }}",
+        "smb_dns_domain": "{{ dc_dns_domain_effective }}",
+        "smb_realm": "{{ dc_realm_effective }}",
+        "smb_workgroup": "{{ dc_workgroup_effective }}"
+      }
+
+# ---- vault-agent setup -------------------------------------------------------
+
+- name: Create vault-agent directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+    owner: root
+    group: root
+  loop:
+    - /opt/vault-agent
+    - /opt/vault-agent/templates
+
+- name: Deploy vault-agent config
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../vault-agent/config/{{ vault_agent_config }}"
+    dest: /opt/vault-agent/config.hcl
+    mode: "0640"
+    owner: root
+    group: root
+  notify: restart vault-agent
+
+- name: Deploy vault-agent templates for this host
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../vault-agent/templates/{{ inventory_hostname }}/"
+    dest: /opt/vault-agent/templates/
+    mode: "0640"
+    owner: root
+    group: root
+  notify: restart vault-agent
+
+- name: Create vault-agent systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/vault-agent.service
+    content: |
+      [Unit]
+      Description=Vault Agent
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/bin/vault agent -config=/opt/vault-agent/config.hcl
+      Restart=on-failure
+      RestartSec=30
+      Environment=VAULT_ADDR={{ dc_vault_addr_effective }}
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify: reload systemd
+
+- name: Check if vault-agent credentials are present
+  ansible.builtin.stat:
+    path: /opt/vault-agent/role-id
+  register: vault_role_id_stat
+
+- name: Enable vault-agent
+  ansible.builtin.systemd:
+    name: vault-agent
+    enabled: true
+    daemon_reload: true
+
+- name: Start vault-agent (only if credentials exist)
+  ansible.builtin.systemd:
+    name: vault-agent
+    state: started
+  when: vault_role_id_stat.stat.exists
+
+# ---- ansible-pull self-management timer --------------------------------------
+
+- name: Create ansible-pull systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ansible-pull.service
+    content: |
+      [Unit]
+      Description=ansible-pull — apply homelab configuration
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      User=root
+      ExecStart=/usr/bin/ansible-pull \
+        --url {{ ansible_pull_repo }} \
+        --directory /opt/ansible-pull \
+        --inventory {{ ansible_pull_inventory }} \
+        {{ ansible_pull_playbook }}
+      StandardOutput=journal
+      StandardError=journal
+    mode: "0644"
+  notify: reload systemd
+
+- name: Create ansible-pull systemd timer
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ansible-pull.timer
+    content: |
+      [Unit]
+      Description=Run ansible-pull every 15 minutes
+
+      [Timer]
+      OnBootSec=5min
+      OnUnitActiveSec=15min
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+    mode: "0644"
+  notify: reload systemd
+
+- name: Enable and start ansible-pull timer
+  ansible.builtin.systemd:
+    name: ansible-pull.timer
+    enabled: true
+    state: started
+    daemon_reload: true

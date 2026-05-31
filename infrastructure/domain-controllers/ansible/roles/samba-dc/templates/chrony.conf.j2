@@ -1,0 +1,4 @@
+# chrony.conf managed by Ansible
+server {{ chrony_ntp_server }} iburst
+makestep 1.0 3
+rtcsync

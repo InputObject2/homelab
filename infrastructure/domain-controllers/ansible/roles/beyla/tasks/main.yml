@@ -1,0 +1,37 @@
+---
+- name: Download Beyla binary archive
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/grafana/beyla/releases/download/{{ beyla_version }}/beyla-{{ beyla_arch }}-{{ beyla_version }}.tar.gz
+    dest: /tmp/beyla-{{ beyla_version }}.tar.gz
+    mode: "0644"
+    timeout: 60
+
+- name: Extract Beyla binary
+  ansible.builtin.unarchive:
+    src: /tmp/beyla-{{ beyla_version }}.tar.gz
+    dest: /usr/local/bin/
+    remote_src: true
+    include:
+      - beyla
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Template Beyla systemd service
+  ansible.builtin.template:
+    src: beyla.service.j2
+    dest: /etc/systemd/system/beyla.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart beyla
+
+- name: Enable and start Beyla
+  ansible.builtin.systemd:
+    name: beyla
+    enabled: true
+    state: started
+    daemon_reload: true

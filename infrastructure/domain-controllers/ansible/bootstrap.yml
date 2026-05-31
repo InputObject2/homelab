@@ -1,0 +1,124 @@
+---
+# Bootstrap playbook — run once from operator machine to initialise vault
+# AppRole credentials and apply the full configuration for the first time.
+#
+# Usage:
+#   ansible-playbook \
+#     -i infrastructure/domain-controllers/ansible/inventory/hosts.yml \
+#     infrastructure/domain-controllers/ansible/bootstrap.yml \
+#     --extra-vars "vault_token=hvs.xxxx vault_addr=https://vault.example.com smb_dns_domain=example.com smb_realm=EXAMPLE.COM smb_workgroup=EXAMPLE"
+#
+# Prerequisites:
+#   - SSH access to both DCs as cloud-user with sudo
+#   - Vault token with permission to create policies and AppRole roles
+#   - Vault paths pre-populated (see infrastructure/domain-controllers/vault/APPROLES.md)
+
+- name: Vault setup (localhost)
+  hosts: localhost
+  gather_facts: false
+  vars:
+    dc_hosts:
+      - name: dc-1
+        host: us20-dc-63165
+      - name: dc-2
+        host: us20-dc-97332
+  tasks:
+    - name: Install required Ansible collections
+      ansible.builtin.command:
+        cmd: "ansible-galaxy collection install {{ item }}"
+      loop:
+        - community.general
+        - community.hashi_vault
+      changed_when: false
+
+    - name: Create dc-shared Vault policy
+      community.hashi_vault.vault_write:
+        path: sys/policies/acl/dc-shared
+        data:
+          policy: "{{ lookup('file', playbook_dir + '/../vault/policies/dc-shared.hcl') }}"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+
+    - name: Create AppRole roles for each DC
+      community.hashi_vault.vault_write:
+        path: "auth/approle/role/{{ item }}"
+        data:
+          token_ttl: "1h"
+          token_max_ttl: "4h"
+          policies: "dc-shared"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      loop:
+        - dc-1
+        - dc-2
+
+    - name: Fetch role-ids
+      community.hashi_vault.vault_read:
+        path: "auth/approle/role/{{ item }}/role-id"
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      register: role_ids
+      loop:
+        - dc-1
+        - dc-2
+
+    - name: Generate secret-ids
+      community.hashi_vault.vault_write:
+        path: "auth/approle/role/{{ item }}/secret-id"
+        data: {}
+        auth_method: token
+        token: "{{ vault_token }}"
+        url: "{{ vault_addr }}"
+      register: secret_ids
+      loop:
+        - dc-1
+        - dc-2
+
+    - name: Store role-ids as facts
+      ansible.builtin.set_fact:
+        "vault_role_id_{{ item.item | replace('-', '_') }}": "{{ item.data.data.role_id }}"
+      loop: "{{ role_ids.results }}"
+
+    - name: Store secret-ids as facts
+      ansible.builtin.set_fact:
+        "vault_secret_id_{{ item.item | replace('-', '_') }}": "{{ item.data.data.secret_id }}"
+      loop: "{{ secret_ids.results }}"
+
+- name: Bootstrap domain controllers
+  hosts: domain_controllers
+  become: true
+  vars:
+    dc_name_map:
+      us20-dc-63165: dc-1
+      us20-dc-97332: dc-2
+  tasks:
+    - name: Write vault AppRole role-id
+      ansible.builtin.copy:
+        content: "{{ hostvars['localhost']['vault_role_id_' ~ dc_name_map[inventory_hostname] | replace('-', '_')] }}"
+        dest: /opt/vault-agent/role-id
+        mode: "0640"
+        owner: root
+        group: root
+
+    - name: Write vault AppRole secret-id
+      ansible.builtin.copy:
+        content: "{{ hostvars['localhost']['vault_secret_id_' ~ dc_name_map[inventory_hostname] | replace('-', '_')] }}"
+        dest: /opt/vault-agent/secret-id
+        mode: "0640"
+        owner: root
+        group: root
+
+  roles:
+    - common
+    - samba-dc
+    - node-exporter
+    - samba-ad-exporter
+
+  post_tasks:
+    - name: Start vault-agent now that credentials are in place
+      ansible.builtin.systemd:
+        name: vault-agent
+        state: started

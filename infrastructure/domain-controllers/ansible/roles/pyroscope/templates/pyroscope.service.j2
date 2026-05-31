@@ -1,0 +1,19 @@
+[Unit]
+Description=Grafana Pyroscope Profiling Backend
+Documentation=https://grafana.com/oss/pyroscope/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pyroscope
+Group=pyroscope
+ExecStart=/usr/local/bin/pyroscope -server.http-listen-address={{ pyroscope_http_listen_address }} -server.http-listen-port={{ pyroscope_http_port }} -write-path=ingester -ingester.readiness-check-ring-health=false -ingester.min-ready-duration=0s -metastore.min-ready-duration=0s -segment-writer.readiness-check-ring-health=false -segment-writer.min-ready-duration=0s -pyroscopedb.data-path={{ pyroscope_data_dir }} -self-profiling.disable-push=true
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+WorkingDirectory={{ pyroscope_data_dir }}
+
+[Install]
+WantedBy=multi-user.target

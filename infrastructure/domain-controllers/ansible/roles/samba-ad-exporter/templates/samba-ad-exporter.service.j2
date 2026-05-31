@@ -1,0 +1,23 @@
+[Unit]
+Description=Samba AD Prometheus Exporter
+Documentation=https://github.com/InputObject2/homelab
+After=samba-ad-dc.service
+Wants=samba-ad-dc.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/opt/samba-ad-exporter/venv/bin/python /opt/samba-ad-exporter/samba_ad_exporter.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment=EXPORTER_PORT=9101
+Environment=COLLECT_INTERVAL=60
+Environment=SMB_CONF=/etc/samba/smb.conf
+Environment=SAMBA_DB_DIR=/var/lib/samba
+Environment=TLS_CERT=/var/lib/samba/private/tls/cert.pem
+Environment=AD_BASE_DN={{ ad_base_dn | default('DC=core,DC=ntmax,DC=ca') }}
+
+[Install]
+WantedBy=multi-user.target

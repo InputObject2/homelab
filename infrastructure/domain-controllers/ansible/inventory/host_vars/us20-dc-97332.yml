@@ -1,0 +1,6 @@
+---
+dc_role: additional
+smb_netbios_name: US20-DC-97332
+smb_primary_host: us20-dc-63165
+chrony_ntp_server: "ca.pool.ntp.org"
+vault_agent_config: "dc-2.hcl"

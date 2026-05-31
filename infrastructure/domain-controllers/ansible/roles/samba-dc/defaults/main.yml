@@ -1,0 +1,12 @@
+---
+dns_forwarder_ips: "10.222.0.186 10.222.0.187"
+samba_packages:
+  - samba
+  - samba-ad-dc
+  - winbind
+  - krb5-user
+  - chrony
+  - rsync
+
+samba_ad_backup_minute: "17"
+samba_ad_backup_hour: "3"

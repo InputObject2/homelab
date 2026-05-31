@@ -1,0 +1,6 @@
+---
+pyroscope_version: "2.0.2"
+pyroscope_arch: "linux_amd64"
+pyroscope_http_listen_address: "0.0.0.0"
+pyroscope_http_port: 4040
+pyroscope_data_dir: "/var/lib/pyroscope"

@@ -1,0 +1,20 @@
+[global]
+    netbios name = {{ smb_netbios_name }}
+    realm = {{ dc_realm_effective }}
+    server role = active directory domain controller
+    workgroup = {{ dc_workgroup_effective }}
+    dns forwarder = {{ dns_forwarder_ips }}
+    # Structured auth events for exporter counters (success/failure per service).
+    log level = 1 auth_json_audit:3
+    tls enabled  = yes
+    tls keyfile  = /var/lib/samba/private/tls/key.pem
+    tls certfile = /var/lib/samba/private/tls/cert.pem
+    tls cafile   = /var/lib/samba/private/tls/ca.pem
+
+[sysvol]
+    path = /var/lib/samba/sysvol
+    read only = No
+
+[netlogon]
+    path = /var/lib/samba/sysvol/{{ dc_dns_domain_effective }}/scripts
+    read only = No

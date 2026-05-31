@@ -1,0 +1,64 @@
+---
+- name: Allow node-exporter port through UFW
+  community.general.ufw:
+    rule: allow
+    port: "9100"
+    proto: tcp
+
+- name: Create node_exporter system user
+  ansible.builtin.user:
+    name: node_exporter
+    system: true
+    shell: /sbin/nologin
+    create_home: false
+
+- name: Download node_exporter binary
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/prometheus/node_exporter/releases/download/{{ node_exporter_version }}/node_exporter-{{ node_exporter_version[1:] }}.{{ node_exporter_arch }}.tar.gz
+    dest: /tmp/node_exporter.tar.gz
+    mode: "0644"
+    timeout: 60
+
+- name: Extract node_exporter binary
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /usr/local/bin/
+    extra_opts:
+      - "--strip-components=1"
+      - "--wildcards"
+      - "*/node_exporter"
+    remote_src: true
+    creates: /usr/local/bin/node_exporter
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create node_exporter systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/node_exporter.service
+    content: |
+      [Unit]
+      Description=Prometheus Node Exporter
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=node_exporter
+      ExecStart=/usr/local/bin/node_exporter
+      Restart=always
+      RestartSec=5
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify: reload systemd
+
+- name: Enable and start node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    enabled: true
+    state: started
+    daemon_reload: true
