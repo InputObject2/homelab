@@ -21,6 +21,7 @@ all_stacks:
   - zigbee2mqtt
   - mosquitto
   - voip
+  - xcp-ng
 portainer_server_host: "srv-26"
 portainer_version: "latest"
 vault_agent_image: "hashicorp/vault:1.21.1"

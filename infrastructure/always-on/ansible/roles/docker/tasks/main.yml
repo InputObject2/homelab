@@ -47,6 +47,18 @@
     enabled: yes
     state: started
 
+- name: Configure Docker daemon DNS
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "dns": ["172.17.0.1", "1.1.1.1"]
+      }
+    mode: '0644'
+    owner: root
+    group: root
+  notify: restart docker
+
 - name: Create base directories
   ansible.builtin.file:
     path: "{{ item }}"

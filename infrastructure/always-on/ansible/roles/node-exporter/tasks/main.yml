@@ -1,0 +1,21 @@
+---
+# Deploy node-exporter as a Docker container with host networking so that
+# prometheus can scrape host metrics via host.docker.internal:9100
+
+- name: Allow node-exporter port through UFW
+  community.general.ufw:
+    rule: allow
+    port: '9100'
+    proto: tcp
+
+- name: Deploy node-exporter
+  community.docker.docker_container:
+    name: node-exporter
+    image: "prom/node-exporter:{{ node_exporter_version }}"
+    restart_policy: unless-stopped
+    network_mode: host
+    pid_mode: host
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'

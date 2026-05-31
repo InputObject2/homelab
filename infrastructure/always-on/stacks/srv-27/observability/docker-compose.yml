@@ -9,10 +9,12 @@ services:
       - "9090:9090/tcp"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./prometheus-rules.yaml:/etc/prometheus/prometheus-rules.yaml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
 
   grafana:
     image: grafana/grafana:13.0.1@sha256:0f86bada30d65ef9d0183b90c1e2682ac92d53d95da8bed322b984ea78a4a73a
@@ -22,6 +24,8 @@ services:
       - "3000:3000/tcp"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     env_file:
       - /opt/secrets/observability/observability.env
 
@@ -34,6 +38,20 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
       - loki_data:/loki
+
+  tempo:
+    image: grafana/tempo:2.9.2@sha256:3f0825e14397d3459e11e96f99ddd3976ec0cb75e328459e173298d9fb74b407
+    container_name: tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200/tcp"
+      - "4317:4317/tcp"
+      - "4318:4318/tcp"
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command:
+      - '-config.file=/etc/tempo/tempo.yaml'
 
   influxdb:
     image: influxdb:2.8.0@sha256:e3e7ee6476007edc0577e9114c78028112e92e48ead3545865d35187cd9a5eda
@@ -52,12 +70,21 @@ services:
     restart: unless-stopped
     volumes:
       - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail-config.yaml:/etc/promtail/config.yaml
     command:
       - '-config.file=/etc/promtail/config.yaml'
+
+  xcp-ng:
+    image: ghcr.io/mikedombo/xen-exporter:latest@sha256:6f384c24a396e41bf859e258b9337954ecc445571d3aa8e9c5f3670df8292232
+    container_name: xcp-ng-exporter
+    restart: unless-stopped
+    env_file:
+      - /opt/secrets/xcp-ng/xcp-ng.env
 
 volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  tempo_data:
   influxdb_data:

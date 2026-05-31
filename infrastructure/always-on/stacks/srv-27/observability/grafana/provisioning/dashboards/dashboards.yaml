@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: samba-ad-dashboards
+    orgId: 1
+    folder: Domain Controllers
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

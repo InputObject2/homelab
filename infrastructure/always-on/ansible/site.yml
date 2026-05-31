@@ -8,3 +8,4 @@
     - netplan
     - vault-agent
     - portainer
+    - node-exporter

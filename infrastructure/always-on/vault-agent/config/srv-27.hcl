@@ -27,3 +27,8 @@ template {
   source      = "/vault-agent/templates/observability.tpl"
   destination = "/secrets/observability/observability.env"
 }
+
+template {
+  source      = "/vault-agent/templates/xcp-ng.tpl"
+  destination = "/secrets/xcp-ng/xcp-ng.env"
+}

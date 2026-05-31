@@ -140,3 +140,23 @@
     state: present
   when: "'technitium' in host_stacks"
   notify: restart systemd-resolved
+
+- name: Set systemd-resolved upstream DNS to Technitium (localhost:53)
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^DNS='
+    line: DNS=127.0.0.1
+    insertafter: '^\[Resolve\]$'
+    state: present
+  when: "'technitium' in host_stacks"
+  notify: restart systemd-resolved
+
+- name: Set systemd-resolved fallback DNS for when Technitium is unavailable
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^FallbackDNS='
+    line: FallbackDNS=1.1.1.1
+    insertafter: '^\[Resolve\]$'
+    state: present
+  when: "'technitium' in host_stacks"
+  notify: restart systemd-resolved
