@@ -8,8 +8,8 @@ services:
     ports:
       - "9090:9090/tcp"
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
-      - ./prometheus-rules.yaml:/etc/prometheus/prometheus-rules.yaml:ro
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/prometheus-rules.yaml:/etc/prometheus/prometheus-rules.yaml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -24,8 +24,8 @@ services:
       - "3000:3000/tcp"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
     env_file:
       - /opt/secrets/observability/observability.env
 
@@ -36,7 +36,7 @@ services:
     ports:
       - "3100:3100/tcp"
     volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
 
   tempo:
@@ -48,7 +48,7 @@ services:
       - "4317:4317/tcp"
       - "4318:4318/tcp"
     volumes:
-      - ./tempo-config.yaml:/etc/tempo/tempo.yaml:ro
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/tempo-config.yaml:/etc/tempo/tempo.yaml:ro
       - tempo_data:/var/tempo
     command:
       - '-config.file=/etc/tempo/tempo.yaml'
@@ -71,7 +71,7 @@ services:
     volumes:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
     command:
       - '-config.file=/etc/promtail/config.yaml'
 
