@@ -2,7 +2,7 @@ groups:
   - name: domain-controllers
     rules:
       - alert: DomainControllerNodeExporterDown
-        expr: up{job="node", instance=~"us20-dc-63165\.core:9100|us20-dc-97332\.core:9100"} == 0
+        expr: up{job="node", instance=~"us20-dc-*"} == 0
         for: 2m
         labels:
           severity: warning
