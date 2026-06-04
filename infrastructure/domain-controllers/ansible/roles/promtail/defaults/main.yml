@@ -1,0 +1,6 @@
+---
+promtail_version: "3.4.3"
+promtail_arch: "linux-amd64"
+promtail_config_dir: "/etc/promtail"
+promtail_positions_dir: "/var/lib/promtail"
+promtail_loki_url: "http://10.222.0.187:3100/loki/api/v1/push"

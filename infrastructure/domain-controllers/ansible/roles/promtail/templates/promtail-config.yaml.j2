@@ -1,0 +1,27 @@
+server:
+  http_listen_address: 127.0.0.1
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: {{ promtail_positions_dir }}/positions.yaml
+
+clients:
+  - url: {{ promtail_loki_url }}
+
+scrape_configs:
+  - job_name: samba
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: samba
+          host: "{{ ansible_hostname }}"
+          __path__: /var/log/samba/log.samba
+    pipeline_stages:
+      # Group multiline samba log entries: each entry starts with a '[' at
+      # column 0 (the timestamp/source header), followed by the JSON body on
+      # the next line.
+      - multiline:
+          firstline: '^\['
+          max_wait_time: 3s

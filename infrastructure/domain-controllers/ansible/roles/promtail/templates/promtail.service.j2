@@ -1,0 +1,18 @@
+[Unit]
+Description=Grafana Promtail Log Shipping Agent
+Documentation=https://grafana.com/docs/loki/latest/send-data/promtail/
+After=network-online.target samba-ad-dc.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=promtail
+Group=promtail
+ExecStart=/usr/local/bin/promtail -config.file={{ promtail_config_dir }}/config.yaml
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -4,8 +4,8 @@
     server role = active directory domain controller
     workgroup = {{ dc_workgroup_effective }}
     dns forwarder = {{ dns_forwarder_ips }}
-    # Structured auth events for exporter counters (success/failure per service).
-    log level = 1 auth_json_audit:3
+    # Structured auth/directory audit events shipped to Loki via promtail.
+    log level = 1 auth_json_audit:3 dsdb_json_audit:3
     tls enabled  = yes
     tls keyfile  = /var/lib/samba/private/tls/key.pem
     tls certfile = /var/lib/samba/private/tls/cert.pem
