@@ -15,10 +15,14 @@ StandardOutput=journal
 StandardError=journal
 Environment=BEYLA_TRACE_PRINTER={{ beyla_trace_printer }}
 Environment=BEYLA_EXECUTABLE_NAME={{ beyla_executable_name }}
+Environment=BEYLA_OPEN_PORT=88,135,389,445,464,636,3268,3269
 Environment=OTEL_SERVICE_NAME={{ beyla_service_name }}
 {% if beyla_otlp_endpoint | default('') | length > 0 %}
-Environment=OTEL_EXPORTER_OTLP_PROTOCOL={{ beyla_otlp_protocol }}
-Environment=OTEL_EXPORTER_OTLP_ENDPOINT={{ beyla_otlp_endpoint }}
+Environment=OTEL_TRACES_EXPORTER=otlp
+Environment=OTEL_METRICS_EXPORTER=none
+Environment=OTEL_LOGS_EXPORTER=none
+Environment=OTEL_EXPORTER_OTLP_TRACES_PROTOCOL={{ beyla_otlp_protocol }}
+Environment=OTEL_EXPORTER_OTLP_TRACES_ENDPOINT={{ beyla_otlp_endpoint | regex_replace('/$', '') }}/v1/traces
 {% if beyla_otlp_headers | default('') | length > 0 %}
 Environment=OTEL_EXPORTER_OTLP_HEADERS={{ beyla_otlp_headers }}
 {% endif %}
