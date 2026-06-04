@@ -41,17 +41,6 @@ scrape_configs:
         labels:
           group: domain_controllers
 
-  - job_name: dc-pyroscope
-    scrape_interval: 30s
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-          - us20-dc-63165.core:4040
-          - us20-dc-97332.core:4040
-        labels:
-          group: domain_controllers
-          service: pyroscope
-
   - job_name: tempo
     scrape_interval: 30s
     static_configs:
