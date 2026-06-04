@@ -14,20 +14,19 @@ scrape_configs:
   - job_name: node
     static_configs:
       - targets:
-          # using abridged names since the dns will auto-complete the rest
           # physical hosts
-          - srv-16-backups.core:9100
-          - srv-18-truenas.core:9100
-          - srv-26.core:9100
-          - srv-27.core:9100
-          - srv-28.core:9100
+          - 10.222.0.176:9100
+          - 10.222.0.177:9100
+          - 10.222.0.178:9100
+          - 10.222.0.186:9100
+          - 10.222.0.187:9100
 
           # virtual machines
-          - us20-dc-63165.core:9100 # ad
-          - us20-dc-97332.core:9100 # ad
-          - us20-voip-2218.core:9100 # voip
-          - us20-matterbridge-6960.wifi:9100 # home-assistant matter bridge
-          - us20-gateway-3714.core:9100 # tailnet subnet router (tailscale)
+          - 10.222.0.18:9100 # ad
+          - 10.222.0.19:9100 # ad
+          - 10.222.0.30:9100 # voip
+          - 10.222.30.228:9100 # home-assistant matter bridge
+          - 10.99.99.101:9100 # tailnet subnet router (tailscale)
 
           # Kubernetes prometheus instance
           - prometheus:9100
@@ -36,8 +35,8 @@ scrape_configs:
     scrape_interval: 30s
     static_configs:
       - targets:
-          - us20-dc-63165.core:9101
-          - us20-dc-97332.core:9101
+          - 10.222.0.18:9101
+          - 10.222.0.19:9101
         labels:
           group: domain_controllers
 
@@ -54,4 +53,4 @@ scrape_configs:
     scrape_timeout: 50s
     static_configs:
       - targets:
-          - xcp-ng:9100 # the xen-exporter container, which scrapes the XCP-ng host and exposes pool metrics on port 9100
+          - xcp-ng-exporter:9100 # the xen-exporter container, which scrapes the XCP-ng host and exposes pool metrics on port 9100
