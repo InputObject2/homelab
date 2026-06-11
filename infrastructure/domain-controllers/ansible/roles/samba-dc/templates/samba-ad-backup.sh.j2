@@ -3,19 +3,64 @@ set -eu
 
 ENV_FILE="/etc/default/samba-ad-backup"
 BACKUP_ROOT="/var/backups/samba-ad"
+TEXTFILE_DIR="/var/lib/node_exporter/textfile_collector"
+TEXTFILE_TMP="$TEXTFILE_DIR/.samba-ad-backup.prom.tmp"
+TEXTFILE="$TEXTFILE_DIR/samba-ad-backup.prom"
+
+START_TIME=$(date +%s)
+EXIT_CODE=1  # pessimistic default
 
 mkdir -p "$BACKUP_ROOT"
 WORKDIR=$(mktemp -d "$BACKUP_ROOT/tmp.XXXXXX")
 
+write_metrics() {
+    END_TIME=$(date +%s)
+    DURATION=$((END_TIME - START_TIME))
+    FILE_SIZE=0
+    if [ -n "${local_backup_file:-}" ] && [ -f "$local_backup_file" ]; then
+        FILE_SIZE=$(stat -c%s "$local_backup_file" 2>/dev/null || echo 0)
+    fi
+
+    cat > "$TEXTFILE_TMP" <<EOF
+# HELP samba_ad_backup_exit_code Exit code of the last backup run (0=success)
+# TYPE samba_ad_backup_exit_code gauge
+samba_ad_backup_exit_code $EXIT_CODE
+# HELP samba_ad_backup_last_run_timestamp_seconds Unix timestamp of the last backup attempt
+# TYPE samba_ad_backup_last_run_timestamp_seconds gauge
+samba_ad_backup_last_run_timestamp_seconds $START_TIME
+# HELP samba_ad_backup_duration_seconds Duration of the last backup run in seconds
+# TYPE samba_ad_backup_duration_seconds gauge
+samba_ad_backup_duration_seconds $DURATION
+# HELP samba_ad_backup_file_size_bytes Size of the last backup archive in bytes
+# TYPE samba_ad_backup_file_size_bytes gauge
+samba_ad_backup_file_size_bytes $FILE_SIZE
+EOF
+
+    # Only update last_success if this run succeeded
+    if [ "$EXIT_CODE" -eq 0 ]; then
+        cat >> "$TEXTFILE_TMP" <<EOF
+# HELP samba_ad_backup_last_success_timestamp_seconds Unix timestamp of the last successful backup
+# TYPE samba_ad_backup_last_success_timestamp_seconds gauge
+samba_ad_backup_last_success_timestamp_seconds $START_TIME
+EOF
+    elif [ -f "$TEXTFILE" ]; then
+        # Preserve last known success timestamp from previous run
+        grep '^samba_ad_backup_last_success_timestamp_seconds' "$TEXTFILE" >> "$TEXTFILE_TMP" || true
+        grep '^# HELP samba_ad_backup_last_success' "$TEXTFILE" >> "$TEXTFILE_TMP" || true
+        grep '^# TYPE samba_ad_backup_last_success' "$TEXTFILE" >> "$TEXTFILE_TMP" || true
+    fi
+
+    mv "$TEXTFILE_TMP" "$TEXTFILE"
+}
+
 cleanup() {
+    write_metrics
     rm -rf "$WORKDIR"
 }
 
 trap cleanup EXIT INT TERM
 
 run_backup() {
-    # Offline mode is designed for constrained-memory DCs and performs a
-    # service-coordinated backup from disk rather than a full online clone.
     /usr/bin/samba-tool domain backup offline \
         --targetdir="$WORKDIR"
 }
@@ -40,7 +85,6 @@ local_backup_file="$BACKUP_ROOT/$(basename "$backup_file")"
 mv "$backup_file" "$local_backup_file"
 
 echo "Local backup file: $local_backup_file"
-
 echo "Backup object key: $object_key"
 
 if [ -r "$ENV_FILE" ]; then
@@ -63,3 +107,5 @@ if [ -r "$ENV_FILE" ]; then
 else
     echo "S3 env file not present at $ENV_FILE, keeping local backup only"
 fi
+
+EXIT_CODE=0  # mark success before cleanup trap fires
