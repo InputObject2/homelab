@@ -119,7 +119,7 @@
     - /opt/vault-agent/templates
 
 - name: Deploy vault-agent config
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: "{{ playbook_dir }}/../vault-agent/config/{{ vault_agent_config }}"
     dest: /opt/vault-agent/config.hcl
     mode: "0640"

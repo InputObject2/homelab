@@ -1,5 +1,5 @@
 vault {
-  address = "VAULT_ADDR_PLACEHOLDER"  # overridden by VAULT_ADDR env var in systemd unit
+  address = "{{ dc_vault_addr_effective }}"
 }
 
 auto_auth {
