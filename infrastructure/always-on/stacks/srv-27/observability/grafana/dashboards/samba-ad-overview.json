@@ -128,19 +128,39 @@
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
-          "custom": { "align": "auto", "cellOptions": { "type": "color-background" }, "inspect": false },
-          "mappings": [{ "options": { "0": { "color": "red", "index": 0, "text": "Remote" }, "1": { "color": "green", "index": 1, "text": "Local" } }, "type": "value" }],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+          "color": { "mode": "fixed", "fixedColor": "text" },
+          "custom": { "align": "left", "cellOptions": { "type": "auto" }, "inspect": false }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Role" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "SchemaMaster":         { "text": "Schema Master",           "index": 0 },
+                      "InfrastructureMaster": { "text": "Infrastructure Master",   "index": 1 },
+                      "RidAllocationMaster":  { "text": "RID Allocation Master",   "index": 2 },
+                      "DomainNamingMaster":   { "text": "Domain Naming Master",    "index": 3 },
+                      "DomainDnsZonesMaster": { "text": "Domain DNS Zones Master", "index": 4 },
+                      "ForestDnsZonesMaster": { "text": "Forest DNS Zones Master", "index": 5 }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 4 },
       "id": 20,
-      "options": { "cellHeight": "sm", "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false }, "showHeader": true },
-      "targets": [{ "editorMode": "code", "expr": "samba_ad_fsmo_role_local{instance=~\"$instance\"}", "instant": true, "legendFormat": "", "range": false, "refId": "A" }],
+      "options": { "cellHeight": "sm", "footer": { "show": false }, "showHeader": true, "sortBy": [{ "displayName": "Role", "desc": false }] },
+      "targets": [{ "editorMode": "code", "expr": "samba_ad_fsmo_role_local{instance=~\"$instance\"} == 1", "instant": true, "legendFormat": "", "range": false, "refId": "A" }],
       "title": "FSMO Role Ownership",
-      "transformations": [{ "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true }, "indexByName": { "instance": 0, "role": 1, "Value": 2 }, "renameByName": { "Value": "Held Locally", "instance": "DC", "role": "Role" } } }],
+      "transformations": [{ "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "Value": true, "job": true, "group": true }, "indexByName": { "role": 0, "instance": 1 }, "renameByName": { "role": "Role", "instance": "DC" } } }],
       "type": "table"
     },
     {
@@ -358,6 +378,138 @@
       "options": { "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showCommonLabels": false, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": false },
       "targets": [{ "datasource": { "type": "loki", "uid": "${DS_LOKI}" }, "editorMode": "code", "expr": "{job=\"samba\"} |= `\"dsdbChange\"`", "queryType": "range", "refId": "A" }],
       "title": "Directory Changes (Loki)",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
+      "id": 69,
+      "title": "Samba AD Backup",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "type": "value", "options": { "0": { "color": "green", "index": 0, "text": "OK" } } },
+            { "type": "range", "options": { "from": 1, "to": 1000, "result": { "color": "red", "index": 1, "text": "FAILED" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 52 },
+      "id": 70,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_exit_code{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Last Backup Status",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 23 }, { "color": "red", "value": 25 }] },
+          "unit": "h",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 52 },
+      "id": 71,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "(time() - samba_ad_backup_last_success_timestamp_seconds{instance=~\"$instance\"}) / 3600", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Time Since Last Success",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }] },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 52 },
+      "id": 72,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Last Backup Size",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "s",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 52 },
+      "id": 73,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Last Backup Duration",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 2, "pointSize": 6, "scaleDistribution": { "type": "linear" }, "showPoints": "always", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 56 },
+      "id": 74,
+      "options": { "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes{instance=~\"$instance\"}", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
+      "title": "Backup Size History",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 2, "pointSize": 6, "scaleDistribution": { "type": "linear" }, "showPoints": "always", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 56 },
+      "id": 75,
+      "options": { "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds{instance=~\"$instance\"}", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
+      "title": "Backup Duration History",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "${DS_LOKI}" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 63 },
+      "id": 76,
+      "options": { "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": false },
+      "targets": [{ "datasource": { "type": "loki", "uid": "${DS_LOKI}" }, "editorMode": "code", "expr": "{job=\"samba_ad_backup\"}", "queryType": "range", "refId": "A" }],
+      "title": "Backup Logs (Loki)",
       "type": "logs"
     }
   ],
