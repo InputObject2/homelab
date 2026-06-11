@@ -31,3 +31,14 @@ scrape_configs:
           job: samba_ad_backup
           host: "{{ ansible_hostname }}"
           __path__: /var/log/samba-ad-backup.log
+
+{% if dc_role == 'additional' %}
+  - job_name: sysvol_rsync
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: sysvol_rsync
+          host: "{{ ansible_hostname }}"
+          __path__: /var/log/sysvol-rsync.log
+{% endif %}

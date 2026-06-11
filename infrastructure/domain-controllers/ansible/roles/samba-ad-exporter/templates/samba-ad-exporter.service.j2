@@ -18,6 +18,7 @@ Environment=SMB_CONF=/etc/samba/smb.conf
 Environment=SAMBA_DB_DIR=/var/lib/samba
 Environment=TLS_CERT=/var/lib/samba/private/tls/cert.pem
 Environment=AD_BASE_DN={{ ad_base_dn | default('DC=core,DC=ntmax,DC=ca') }}
+Environment=SYSVOL_RSYNC_LOG=/var/log/sysvol-rsync.log
 
 [Install]
 WantedBy=multi-user.target

@@ -43,6 +43,7 @@ SMB_CONF = os.environ.get("SMB_CONF", "/etc/samba/smb.conf")
 SAMBA_DB_DIR = os.environ.get("SAMBA_DB_DIR", "/var/lib/samba")
 TLS_CERT = os.environ.get("TLS_CERT", "/var/lib/samba/private/tls/cert.pem")
 AD_BASE_DN = os.environ.get("AD_BASE_DN")
+SYSVOL_RSYNC_LOG = os.environ.get("SYSVOL_RSYNC_LOG", "/var/log/sysvol-rsync.log")
 
 SAM_LDB = os.path.join(SAMBA_DB_DIR, "private", "sam.ldb")
 
@@ -156,6 +157,27 @@ kerberos_requests_total = Counter(
 auth_last_scan_ts = Gauge(
     "samba_ad_auth_last_scan_timestamp_seconds",
     "Unix timestamp of the last samba auth-log scan",
+)
+
+sysvol_rsync_age = Gauge(
+    "samba_ad_sysvol_rsync_age_seconds",
+    "Seconds since the sysvol rsync log was last written (proxy for time since last cron run)",
+)
+sysvol_rsync_ok = Gauge(
+    "samba_ad_sysvol_rsync_last_run_ok",
+    "Result of last sysvol rsync run: 1=success, 0=failed, -1=log absent (not collected on this DC)",
+)
+sysvol_rsync_files = Gauge(
+    "samba_ad_sysvol_rsync_last_files_transferred",
+    "Number of regular files transferred in the last sysvol rsync run (requires --stats in cron)",
+)
+sysvol_rsync_bytes_sent = Gauge(
+    "samba_ad_sysvol_rsync_last_bytes_sent",
+    "Total bytes sent in the last sysvol rsync run",
+)
+sysvol_rsync_bytes_received = Gauge(
+    "samba_ad_sysvol_rsync_last_bytes_received",
+    "Total bytes received in the last sysvol rsync run",
 )
 
 last_collection_ts = Gauge(
@@ -635,6 +657,69 @@ def collect_auth_events():
                         kerberos_requests_total.labels(request_type=auth_type).inc()
 
 
+def collect_sysvol_rsync():
+    """
+    Parse /var/log/sysvol-rsync.log (written by the DC2 sysvol rsync cron) and
+    expose sync age, success/failure status, and transfer stats.
+
+    On DC1 the log does not exist; sysvol_rsync_ok is set to -1 as a sentinel
+    so dashboards can distinguish 'not applicable' from 'failed'.
+    """
+    if not os.path.exists(SYSVOL_RSYNC_LOG):
+        sysvol_rsync_ok.set(-1)
+        return
+
+    try:
+        stat = os.stat(SYSVOL_RSYNC_LOG)
+        sysvol_rsync_age.set(time.time() - stat.st_mtime)
+
+        # Read last 8 KB — enough to cover one full rsync --stats block
+        with open(SYSVOL_RSYNC_LOG, "rb") as fh:
+            fh.seek(max(0, stat.st_size - 8192))
+            tail = fh.read().decode("utf-8", errors="replace")
+
+        lines = tail.splitlines()
+
+        # Determine success/failure: find the last occurrence of each marker
+        # scanning bottom-up; whichever appears later wins.
+        last_success_idx = -1
+        last_error_idx = -1
+        for i, line in enumerate(reversed(lines)):
+            if last_success_idx == -1 and "total size is" in line.lower():
+                last_success_idx = i
+            if last_error_idx == -1 and "rsync error:" in line.lower():
+                last_error_idx = i
+            if last_success_idx != -1 and last_error_idx != -1:
+                break
+
+        if last_success_idx == -1 and last_error_idx == -1:
+            # Log exists but no recognisable marker yet (e.g. first run still in progress)
+            pass
+        elif last_error_idx != -1 and (last_success_idx == -1 or last_error_idx < last_success_idx):
+            # error marker is more recent (lower reversed index = later in file)
+            sysvol_rsync_ok.set(0)
+        else:
+            sysvol_rsync_ok.set(1)
+
+        # Parse --stats output lines (commas used as thousands separator)
+        for line in lines:
+            m = re.search(r"Number of regular files transferred:\s+([\d,]+)", line)
+            if m:
+                sysvol_rsync_files.set(int(m.group(1).replace(",", "")))
+                continue
+            m = re.search(r"Total bytes sent:\s+([\d,]+)", line)
+            if m:
+                sysvol_rsync_bytes_sent.set(int(m.group(1).replace(",", "")))
+                continue
+            m = re.search(r"Total bytes received:\s+([\d,]+)", line)
+            if m:
+                sysvol_rsync_bytes_received.set(int(m.group(1).replace(",", "")))
+
+    except OSError as exc:
+        log.warning("sysvol_rsync collector error: %s", exc)
+        collection_errors.labels(collector="sysvol_rsync").inc()
+
+
 # --------------------------------------------------------------------------- #
 # Collection loop                                                              #
 # --------------------------------------------------------------------------- #
@@ -655,6 +740,7 @@ _COLLECTORS = [
     ("password_settings", collect_password_settings),
     ("active_connections", collect_active_connections),
     ("auth_events", collect_auth_events),
+    ("sysvol_rsync", collect_sysvol_rsync),
 ]
 
 

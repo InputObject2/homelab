@@ -86,7 +86,7 @@
     user: root
     minute: "*/5"
     job: >-
-      rsync -az --delete --password-file=/etc/rsyncd.client.secret
+      rsync -az --stats --delete --password-file=/etc/rsyncd.client.secret
       rsync://rsync@{{ smb_primary_host }}.{{ dc_dns_domain_effective }}/sysvol /var/lib/samba/sysvol/
       >> /var/log/sysvol-rsync.log 2>&1
   when: dc_role == "additional"
