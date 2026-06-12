@@ -14,7 +14,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/home-assistant/home-assistant
-          tag: 2026.5.3@sha256:ff875078181a0383bf3fca9f061be12d6180896dbd531de04e094e25505b0bb9
+          tag: 2026.6.3@sha256:aed891b8f801072302815b4b0fab5adb714182967e9d2e2d4a2be558241c73ad
         resources:
           requests:
             cpu: 50m

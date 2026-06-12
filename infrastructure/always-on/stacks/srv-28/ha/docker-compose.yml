@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   homeassistant:
-    image: ghcr.io/home-assistant/home-assistant:2026.5.2@sha256:f0baa7922ecec7790c40c41baf08ab218b6ab8db5f96dc03b03a0ae33d987c3d
+    image: ghcr.io/home-assistant/home-assistant:2026.6.3@sha256:aed891b8f801072302815b4b0fab5adb714182967e9d2e2d4a2be558241c73ad
     container_name: homeassistant
     restart: unless-stopped
     network_mode: host
