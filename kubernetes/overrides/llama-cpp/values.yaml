@@ -51,8 +51,11 @@ controllers:
           # - name: LLAMA_ARG_FLASH_ATTN
           #   value: "off"
         resources:
+          requests:
+            cpu: 500m
+            memory: 15Gi
           limits:
-            gpu.intel.com/i915: "1"
+            gpu.intel.com/i915: "2"
         probes:
           liveness:
             enabled: true
