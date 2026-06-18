@@ -68,6 +68,8 @@ services:
     image: grafana/promtail:3.6.10@sha256:2a0f5e3e160ee5d549c585f6cc4f4e1c566ff783324a424bd75bc16503fc660e
     container_name: promtail
     restart: unless-stopped
+    ports:
+      - "514:1514/udp"
     volumes:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
