@@ -69,7 +69,7 @@ services:
     container_name: promtail
     restart: unless-stopped
     ports:
-      - "514:1514/udp"
+      - "1514:1514/udp"
     volumes:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
