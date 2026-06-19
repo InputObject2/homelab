@@ -28,6 +28,6 @@ resource "xenorchestra_vm" "this" {
   tags = var.tags
 
   lifecycle {
-    ignore_changes = [disk, affinity_host, template]
+    ignore_changes = [disk, affinity_host, template, destroy_cloud_config_vdi_after_boot, network]
   }
 }
