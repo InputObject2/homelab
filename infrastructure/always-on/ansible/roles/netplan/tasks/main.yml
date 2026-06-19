@@ -1,4 +1,3 @@
----
 # Configure networking using netplan
 
 - name: Template netplan config (default - single NIC)

@@ -1,4 +1,3 @@
----
 - name: restart docker
   ansible.builtin.systemd:
     name: docker

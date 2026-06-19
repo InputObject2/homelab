@@ -1,4 +1,3 @@
----
 # Common tasks for all always-on machines
 # - Set hostname from inventory
 # - Set timezone
@@ -30,14 +29,14 @@
     state: present
     update_cache: yes
 
-#- name: Create ansible system user
+# - name: Create ansible system user
 #  ansible.builtin.user:
 #    name: cloud-user
 #    system: yes
 #    shell: /bin/bash
 #    createhome: yes
 #
-#- name: Configure sudoers for ansible user
+# - name: Configure sudoers for ansible user
 #  community.general.sudoers:
 #    name: "cloud-user"
 #    user: "cloud-user"

@@ -1,4 +1,3 @@
----
 - name: apply netplan
   ansible.builtin.command:
     cmd: netplan apply

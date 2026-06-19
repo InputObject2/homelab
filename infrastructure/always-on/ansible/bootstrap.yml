@@ -1,4 +1,3 @@
----
 # Bootstrap playbook to be run once from operator laptop
 # Usage: ansible-playbook infrastructure/always-on/ansible/bootstrap.yml \
 #  --inventory infrastructure/always-on/ansible/inventory/hosts.yml \

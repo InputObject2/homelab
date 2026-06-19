@@ -1,4 +1,3 @@
----
 - name: Apply always-on machine configuration
   hosts: always_on
   become: true

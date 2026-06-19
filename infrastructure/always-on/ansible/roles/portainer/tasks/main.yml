@@ -1,4 +1,3 @@
----
 # Deploy Portainer server or agent
 
 - name: Create Portainer data directory (server)

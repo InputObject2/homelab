@@ -1,4 +1,3 @@
----
 # Deploy node-exporter as a Docker container with host networking so that
 # prometheus can scrape host metrics via host.docker.internal:9100
 

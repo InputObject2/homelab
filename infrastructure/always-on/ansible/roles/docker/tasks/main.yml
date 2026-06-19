@@ -1,4 +1,3 @@
----
 # Install Docker and Docker Compose
 
 - name: Create /etc/apt/keyrings directory
