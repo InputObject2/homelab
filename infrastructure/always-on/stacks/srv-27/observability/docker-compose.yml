@@ -74,6 +74,7 @@ services:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - promtail_positions:/run/promtail/positions.yaml
     command:
       - '-config.file=/etc/promtail/config.yaml'
 
@@ -90,3 +91,4 @@ volumes:
   loki_data:
   tempo_data:
   influxdb_data:
+  promtail_positions:
