@@ -74,7 +74,7 @@ services:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /opt/ansible-pull/infrastructure/always-on/stacks/srv-27/observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - promtail_positions:/run/promtail/positions.yaml
+      - promtail_positions:/run/promtail/
     command:
       - '-config.file=/etc/promtail/config.yaml'
 
