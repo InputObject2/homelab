@@ -4,6 +4,7 @@
     server role = active directory domain controller
     workgroup = {{ dc_workgroup_effective }}
     dns forwarder = {{ dns_forwarder_ips }}
+    rpc server dynamic port range = 49152-49200
     # Structured auth events shipped to Loki via promtail.
     # dsdb_json_audit at level 3 logs every DSDB read/write including during DRS
     # replication, causing enough disk I/O to trigger WERR_SEM_TIMEOUT (121).

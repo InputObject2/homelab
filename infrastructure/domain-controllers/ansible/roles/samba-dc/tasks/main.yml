@@ -236,16 +236,26 @@
     port: "{{ item.port }}"
     proto: "{{ item.proto }}"
   loop:
-    - {port: "53", proto: "tcp"}
-    - {port: "53", proto: "udp"}
-    - {port: "88", proto: "tcp"}
-    - {port: "88", proto: "udp"}
-    - {port: "389", proto: "tcp"}
-    - {port: "445", proto: "tcp"}
-    - {port: "464", proto: "tcp"}
-    - {port: "636", proto: "tcp"}
-    - {port: "3268", proto: "tcp"}
-    - {port: "3269", proto: "tcp"}
+    - {port: "53", proto: "tcp"}   # DNS
+    - {port: "53", proto: "udp"}   # DNS
+    - {port: "88", proto: "tcp"}   # Kerberos
+    - {port: "88", proto: "udp"}   # Kerberos
+    - {port: "123", proto: "udp"}   # NTP (Kerberos time sync)
+    - {port: "135", proto: "tcp"}   # RPC Endpoint Mapper (DC replication)
+    - {port: "389", proto: "tcp"}   # LDAP
+    - {port: "445", proto: "tcp"}   # SMB
+    - {port: "464", proto: "tcp"}   # kpasswd
+    - {port: "464", proto: "udp"}   # kpasswd
+    - {port: "636", proto: "tcp"}   # LDAPS
+    - {port: "3268", proto: "tcp"}   # Global Catalog
+    - {port: "3269", proto: "tcp"}   # Global Catalog SSL
+
+- name: Allow dynamic RPC port range from DCs
+  community.general.ufw:
+    rule: allow
+    port: "49152:49200"
+    proto: tcp
+    src: "10.222.0.18/31"
 
 - name: Allow rsyncd port through UFW (primary DC)
   community.general.ufw:
