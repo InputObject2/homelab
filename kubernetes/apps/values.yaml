@@ -1,5 +1,4 @@
 # yamllint disable rule:braces
----
 repoURL: "https://github.com/inputobject2/homelab.git"
 targetRevision: main
 domain: "example.com"

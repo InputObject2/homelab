@@ -1,5 +1,4 @@
 {{- if .Values.stacks.apps.enabled }}
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
