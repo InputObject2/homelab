@@ -8,3 +8,10 @@
     backup: yes
   notify:
     - Restart logging service
+
+- name: Add ufw rule for the syslog translation port
+  ansible.posix.ufw:
+    rule: allow
+    port: 514
+    proto: udp
+    comment: "Allow syslog translation port for Loki"
