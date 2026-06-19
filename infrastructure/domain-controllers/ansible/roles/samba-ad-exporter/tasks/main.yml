@@ -1,4 +1,3 @@
----
 - name: Allow samba-ad-exporter port through UFW
   community.general.ufw:
     rule: allow

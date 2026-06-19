@@ -1,4 +1,3 @@
----
 dns_forwarder_ips: "10.222.0.186 10.222.0.187"
 samba_packages:
   - samba

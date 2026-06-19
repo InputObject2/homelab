@@ -1,4 +1,3 @@
----
 - name: Download Beyla binary archive
   ansible.builtin.get_url:
     url: >-

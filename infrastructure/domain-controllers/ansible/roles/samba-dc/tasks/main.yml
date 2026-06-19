@@ -1,4 +1,3 @@
----
 # Install required packages (state: present — never upgrade automatically)
 - name: Install Samba and related packages
   ansible.builtin.apt:
@@ -6,8 +5,7 @@
     state: present
     update_cache: true
 
-# ---- Mask legacy daemons (managed internally by samba-ad-dc) ----------------
-
+# ---- Mask legacy daemons (managed internally by samba-ad-dc) -------------
 - name: Mask smbd, nmbd, and winbind (not used on AD DC)
   ansible.builtin.systemd:
     name: "{{ item }}"
@@ -17,8 +15,7 @@
     - nmbd
     - winbind
 
-# ---- Configuration templates ------------------------------------------------
-
+# ---- Configuration templates ---------------------------------------------
 - name: Template smb.conf
   ansible.builtin.template:
     src: smb.conf.j2
@@ -38,8 +35,7 @@
     mode: "0644"
   notify: restart chrony
 
-# ---- rsyncd (primary DC only — exposes sysvol for DC2 to pull) --------------
-
+# ---- rsyncd (primary DC only — exposes sysvol for DC2 to pull) -----------
 - name: Template rsyncd.conf (primary DC only)
   ansible.builtin.template:
     src: rsyncd.conf.j2
@@ -77,8 +73,7 @@
   when: dc_role == "additional"
   failed_when: false
 
-# ---- Sysvol rsync cron (DC2 only) ------------------------------------------
-
+# ---- Sysvol rsync cron (DC2 only) ---------------------------------------
 - name: Ensure sysvol-rsync cron job exists (additional DC pulls from primary)
   ansible.builtin.cron:
     name: samba-sysvol-rsync
@@ -102,8 +97,7 @@
     access_time: preserve
   when: dc_role == "additional"
 
-# ---- Samba AD backup to S3 (primary DC only) -------------------------------
-
+# ---- Samba AD backup to S3 (primary DC only) ----------------------------
 - name: Ensure Samba AD backup working directory exists (primary DC)
   ansible.builtin.file:
     path: /var/backups/samba-ad
@@ -209,8 +203,7 @@
     state: absent
   when: dc_role == "additional"
 
-# ---- Remove stale sysvol rsync cron from primary DC -------------------------
-# DC1 was incorrectly pulling from a decommissioned third DC (us20-dc-95833).
+# ---- Remove stale sysvol rsync cron from primary DC ----------------------# DC1 was incorrectly pulling from a decommissioned third DC (us20-dc-95833).
 # DC1 is authoritative and must not pull sysvol from anywhere.
 
 - name: Remove stale sysvol rsync cron from primary DC
@@ -228,8 +221,7 @@
   when: dc_role == "primary"
   failed_when: false
 
-# ---- UFW rules --------------------------------------------------------------
-
+# ---- UFW rules -----------------------------------------------------------
 - name: Allow Samba AD ports through UFW
   community.general.ufw:
     rule: allow

@@ -1,4 +1,3 @@
----
 promtail_version: "3.4.3"
 promtail_arch: "linux-amd64"
 promtail_config_dir: "/etc/promtail"

@@ -1,4 +1,3 @@
----
 # Bootstrap playbook — run once from operator machine to initialise vault
 # AppRole credentials and apply the full configuration for the first time.
 #

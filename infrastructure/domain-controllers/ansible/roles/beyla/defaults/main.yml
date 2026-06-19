@@ -1,4 +1,3 @@
----
 beyla_version: "v3.15.0"
 beyla_arch: "linux-amd64"
 beyla_otlp_endpoint: ""

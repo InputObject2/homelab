@@ -1,4 +1,3 @@
----
 - name: Create promtail system user
   ansible.builtin.user:
     name: promtail
