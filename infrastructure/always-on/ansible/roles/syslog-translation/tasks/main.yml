@@ -1,0 +1,10 @@
+- name: Deploy 10-loki-forward.conf template
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/templates/10-loki-forward.conf"
+    dest: /etc/rsyslog.d/10-loki-forward.conf
+    mode: '0644'
+    owner: root
+    group: root
+    backup: yes
+  notify:
+    - Restart logging service

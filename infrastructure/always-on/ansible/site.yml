@@ -9,3 +9,12 @@
     - vault-agent
     - portainer
     - node-exporter
+
+# this is used in collaboration with the promtail configuration to
+# translate syslog messages into a format that can be easily parsed
+# and indexed by Loki.
+- name: Deploy syslog translation configuration
+  hosts: srv-27
+  become: true
+  roles:
+    - syslog-translation
