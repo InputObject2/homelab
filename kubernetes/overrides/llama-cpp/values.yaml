@@ -17,7 +17,7 @@ controllers:
           - /models/gguf/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
           # - /models/gguf/Qwen_Qwen3-14B-Q4_K_M.gguf
           - --ctx-size
-          - "65536"
+          - "81920"
           # - --n-gpu-layers
           # - "40"
           - --n-cpu-moe
