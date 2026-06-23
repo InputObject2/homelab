@@ -4,7 +4,7 @@ ollama:
   enabled: false
 
 ollamaUrls:
- - http://ollama.ollama.svc.cluster.local:11434
+  - http://ollama.ollama.svc.cluster.local:11434
 
 
 image:
@@ -17,6 +17,8 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-production-dns01
     external-dns.alpha.kubernetes.io/hostname: chat.example.com.
     nginx.ingress.kubernetes.io/proxy-set-headers: "X-Forwarded-For $proxy_add_x_forwarded_for"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   host: "chat.example.com"
   tls: true
 
@@ -27,7 +29,29 @@ persistence:
     - ReadWriteMany
   storageClass: "truenas-nfs-nas"
 
+resources:
+  requests:
+    cpu: 100m
+    memory: 1Gi
+
+copyAppData:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+websocket:
+  redis:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+
 pipelines:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
   persistence:
     enabled: true
     size: 50Gi
