@@ -33,6 +33,7 @@ controllers:
           - --ubatch-size
           - "4096"
           - --flash-attn
+          - "on"
           - --log-prefix
           - --no-warmup
           - --parallel
