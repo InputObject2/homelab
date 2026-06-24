@@ -25,11 +25,14 @@ controllers:
           - --host
           - "0.0.0.0"
           - --cache-type-k
-          - q8_0
+          - q4_k_m
           - --cache-type-v
-          - q8_0
+          - q4_k_m
           - --port
           - "8080"
+          - --ubatch-size
+          - "4096"
+          - --flash-attn
           - --log-prefix
           - --no-warmup
           - --parallel
