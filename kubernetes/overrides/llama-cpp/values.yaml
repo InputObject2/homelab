@@ -9,7 +9,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          tag: server-vulkan-b9737
+          tag: server-vulkan-b9776
         args:
           - -m
           # - /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
