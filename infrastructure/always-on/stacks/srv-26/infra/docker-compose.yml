@@ -25,7 +25,7 @@ services:
       - /opt/secrets/gatus/gatus.env
 
   ntfy:
-    image: binwiederhier/ntfy:v2.22.0@sha256:d8b3408c75d5ae78e03339af6103e7e6195e56573eea6f1ad34bb4dc4f44f340
+    image: binwiederhier/ntfy:v2.25.0@sha256:cfbbb1bac9196cb711e29ef0ac4adaeb033be6235f1df857705dc39c14384a1d
     container_name: ntfy
     restart: unless-stopped
     ports:
