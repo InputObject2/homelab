@@ -9,7 +9,7 @@ defaultPodOptions:
 controllers:
   main:
     type: statefulset
-    replicas: 0
+    replicas: 1
     containers:
       main:
         image:
