@@ -9,7 +9,7 @@ defaultPodOptions:
 controllers:
   main:
     type: statefulset
-    replicas: 1
+    replicas: 0
     containers:
       main:
         image:
@@ -28,6 +28,12 @@ controllers:
             protocol: TCP
           - containerPort: 5060
             name: sip
+            protocol: UDP
+          - containerPort: 5004
+            name: rtp
+            protocol: UDP
+          - containerPort: 5005
+            name: rtcp
             protocol: UDP
         probes:
           liveness:
@@ -51,6 +57,12 @@ service:
     ports:
       sip:
         port: 5060
+        protocol: UDP
+      rtp:
+        port: 5004
+        protocol: UDP
+      rtcp:
+        port: 5005
         protocol: UDP
   main:
     controller: main
