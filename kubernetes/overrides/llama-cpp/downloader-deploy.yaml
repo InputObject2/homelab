@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-downloader
+  namespace: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: model-downloader
+  template:
+    metadata:
+      labels:
+        app: model-downloader
+    spec:
+      serviceAccountName: default
+      nodeName: srv-25-arc.core.ntmax.ca
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: ollama-models-hostpath
+      containers:
+        - name: downloader
+          image: docker-private-registry.ntmax.ca/docker.io/library/python:3.12-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - "-c"
+            - |
+              pip install huggingface-hub
+              TARGET=/models/gguf/gemma-4-12B-it-Q6_K.gguf
+              if [ -f "$TARGET" ]; then
+                echo "Model already exists, skipping download"
+              else
+                hf download bartowski/gemma-4-12B-it-GGUF \
+                  gemma-4-12B-it-Q6_K.gguf \
+                  --local-dir /models/gguf \
+                  --format human
+                echo "Download complete"
+              fi
+              mkdir -p /models/templates/
+              wget https://raw.githubusercontent.com/asf0/gemma4_jinja/a1824c817b32e09f3893eed94bbf964aed11f819/chat_template.jinja \
+                -O /models/templates/gemma_chat_template.jinja
+              sleep infinity
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-hub-token
+                  key: token
+          volumeMounts:
+            - name: models
+              mountPath: /models
+      tolerations:
+        - key: gpu.intel.com/i915
+          operator: Exists
+          effect: NoSchedule
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
+        - key: node.kubernetes.io/unreachable
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
