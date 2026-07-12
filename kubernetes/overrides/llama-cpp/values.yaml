@@ -9,7 +9,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          tag: server-vulkan-b9776
+          tag: server-vulkan-b9976
         args:
           - -m
           # - /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
@@ -19,8 +19,8 @@ controllers:
           # - /models/gguf/Qwen_Qwen3-14B-Q4_K_M.gguf
           - --ctx-size
           - "81920"
-          # - --n-gpu-layers
-          # - "40"
+          - --n-gpu-layers
+          - "999"
           #- --n-cpu-moe
           #- "17"
           - --host
@@ -32,7 +32,7 @@ controllers:
           - --port
           - "8080"
           - --ubatch-size
-          - "4096"
+          - "512"
           #- --flash-attn
           #- "on"
           - --log-prefix
@@ -42,9 +42,9 @@ controllers:
           - --threads
           - "8"
           - --verbose
-          #- --chat-template-file
+          - --chat-template-file
           # this is getting downloaded via the downloader deployment and dumped in the pvc
-          #- /models/templates/gemma_chat_template.jinja
+          - /models/templates/gemma_chat_template.jinja
           #- --chat-template-kwargs
           #- '{"enable_thinking":true}'
         env:
