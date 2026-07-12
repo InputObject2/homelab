@@ -42,9 +42,9 @@ controllers:
           - --threads
           - "8"
           - --verbose
-          - --chat-template-file
+          #- --chat-template-file
           # this is getting downloaded via the downloader deployment and dumped in the pvc
-          - /models/templates/gemma_chat_template.jinja
+          #- /models/templates/gemma_chat_template.jinja
           #- --chat-template-kwargs
           #- '{"enable_thinking":true}'
         env:
