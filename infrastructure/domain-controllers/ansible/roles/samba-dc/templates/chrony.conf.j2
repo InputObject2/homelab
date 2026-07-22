@@ -2,3 +2,12 @@
 server {{ chrony_ntp_server }} iburst
 makestep 1.0 3
 rtcsync
+
+# Serve NTP to the domain
+allow all
+
+# serve even if upstream is lost
+local stratum 2
+
+# Samba authenticated NTP (required for domain members)
+ntpsigndsocket /var/lib/samba/ntp_signd
