@@ -102,7 +102,7 @@ if [ -r "$ENV_FILE" ]; then
     export AWS_EC2_METADATA_DISABLED=true
     export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
-    /usr/bin/aws --endpoint-url "$S3_ENDPOINT" s3 cp "$local_backup_file" "s3://$S3_BUCKET/$object_key" --only-show-errors
+    /usr/local/bin/aws --endpoint-url "$S3_ENDPOINT" s3 cp "$local_backup_file" "s3://$S3_BUCKET/$object_key" --only-show-errors
     echo "Uploaded backup to s3://$S3_BUCKET/$object_key"
 else
     echo "S3 env file not present at $ENV_FILE, keeping local backup only"
