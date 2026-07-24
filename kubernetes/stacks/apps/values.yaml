@@ -1,4 +1,3 @@
----
 repoURL: "https://github.com/inputobject2/homelab.git"
 targetRevision: main
 domain: "example.com"
@@ -18,3 +17,6 @@ zammad:
 
 xenOrchestra:
   subdomain: xen-orchestra
+
+itop:
+  subdomain: itop
