@@ -18,7 +18,7 @@ controllers:
       config-init:
         image:
           repository: docker.io/mikefarah/yq
-          tag: "4.44.3@sha256:5b3d851bf28b04ef902fee86305f4dd7e063919c1cafedab2042adb16221c025"
+          tag: "4.53.3@sha256:11a1f0b604b13dbbdc662260d8db6f644b22d8553122a25c1b5b2e8713ca6977"
         command:
           - /bin/sh
           - -c
