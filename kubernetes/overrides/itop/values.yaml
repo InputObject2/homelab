@@ -1,0 +1,437 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
+controllers:
+  main:
+    type: deployment
+    replicas: 1
+
+    containers:
+      main:
+        image:
+          repository: docker.io/itop # this doesnt actually exist, I'm overriding this in the argocd app with a private registry image
+          tag: v3.2.3-1-19993
+        # itop doesn't support config by environment variables, I'll try to build in a script in my image that takes the env vars and replaces
+        # them in the generated configuration on disk.
+        #env:
+        #  - name: DB_HOST
+        #    valueFrom:
+        #      secretKeyRef:
+        #        name: itop-database-connection
+        #        key: DB_HOST
+        #  - name: DB_USER
+        #    valueFrom:
+        #      secretKeyRef:
+        #        name: itop-database-connection
+        #        key: DB_USER
+        #  - name: DB_PASSWORD
+        #    valueFrom:
+        #      secretKeyRef:
+        #        name: itop-database-connection
+        #        key: DB_PASSW
+        resources:
+          requests:
+            cpu: 50m
+            memory: 100Mi
+          limits:
+            cpu: 2
+            memory: 1Gi
+        probes:
+          liveness:
+            enabled: false
+          readiness:
+            enabled: false
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 33
+          runAsGroup: 33
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  main:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+      external-dns.alpha.kubernetes.io/hostname: itop.mydomain.com.
+    hosts:
+      - host: itop.mydomain.com
+        paths:
+          - path: "/"
+            pathType: Prefix
+            service:
+              name: main
+              port: 8080
+    tls:
+      - hosts:
+          - itop.mydomain.com
+        secretName: tls-itop
+
+persistence:
+  itop:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: truenas-nfs-nas
+    accessMode: ReadWriteMany
+    size: 10Gi
+    advancedMounts:
+      main:
+        main:
+          - path: /var/www/html/itop/data
+            subPath: data
+          - path: /var/www/html/itop/log
+            subPath: log
+          - path: /var/www/html/itop/conf
+            subPath: conf
+          - path: /var/www/html/itop/env-production
+            subPath: env-production
+          - path: /var/www/html/itop/env-production-build
+            subPath: env-production-build
+
+  tmp:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      main:
+        main:
+          - path: /tmp
+
+  nginx-run:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      main:
+        main:
+          - path: /run
+
+rawResources:
+  mariadb-root-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: itop-mariadb-root
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          name: itop-mariadb-root
+          creationPolicy: Owner
+          deletionPolicy: Retain
+        data:
+          - secretKey: username
+            remoteRef:
+              key: apps/itop/mariadb/root
+              property: username
+          - secretKey: password
+            remoteRef:
+              key: apps/itop/mariadb/root
+              property: password
+
+  mariadb-user-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: itop-mariadb-mariadb
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          name: itop-mariadb-mariadb
+          creationPolicy: Owner
+          deletionPolicy: Retain
+        data:
+          - secretKey: username
+            remoteRef:
+              key: apps/itop/mariadb/root
+              property: username
+          - secretKey: password
+            remoteRef:
+              key: apps/itop/mariadb/root
+              property: password
+
+  s3-backup-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: itop-s3-backup-key
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          name: itop-s3-backup-key
+          creationPolicy: Owner
+          deletionPolicy: Retain
+        data:
+          - secretKey: access-key-id
+            remoteRef:
+              key: apps/itop/s3
+              property: access-key-id
+          - secretKey: secret-access-key
+            remoteRef:
+              key: apps/itop/s3
+              property: secret-access-key
+
+  mariadb-config:
+    apiVersion: v1
+    kind: ConfigMap
+    spec:
+      metadata:
+        name: itop-mariadb-config
+      data:
+        config: |
+          [mariadb]
+          bind-address=*
+          default_storage_engine=InnoDB
+          binlog_format=row
+          innodb_autoinc_lock_mode=2
+          max_allowed_packet=256M
+          max_user_connections=0
+
+  mariadb:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: MariaDB
+    spec:
+      metadata:
+        name: itop-mariadb
+      spec:
+        image: docker.io/library/mariadb:11.8.8
+
+        port: 3306
+
+        replicas: 3
+
+        replication:
+          enabled: true
+
+        rootPasswordSecretKeyRef:
+          name: itop-mariadb-root
+          key: password
+
+        storage:
+          size: 100Gi
+          storageClassName: truenas-iscsi-nas
+          resizeInUseVolumes: true
+          waitForVolumeResize: true
+
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - topologyKey: kubernetes.io/hostname
+
+        myCnfConfigMapKeyRef:
+          name: itop-mariadb-config
+          key: config
+
+        livenessProbe:
+          exec:
+            command:
+              - bash
+              - -c
+              - mariadb -u root -p"$${MARIADB_ROOT_PASSWORD}" -e "SELECT 1;"
+          initialDelaySeconds: 180
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+  backup:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Backup
+    spec:
+      metadata:
+        name: itop-backup
+      spec:
+        mariaDbRef:
+          name: itop-mariadb
+
+        schedule:
+          cron: "*/1 * * * *"
+          suspend: false
+
+        maxRetention: 720h
+
+        storage:
+          s3:
+            bucket: backups
+            endpoint: truenas-k8s.core.${helmsman_dns_domain}:9000
+            accessKeyIdSecretKeyRef:
+              name: itop-s3-backup-key
+              key: access-key-id
+            secretAccessKeySecretKeyRef:
+              name: itop-s3-backup-key
+              key: secret-access-key
+            tls:
+              enabled: true
+
+        args:
+          - --single-transaction
+          - --all-databases
+
+        logLevel: info
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 300m
+            memory: 512Mi
+
+  database-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: itop-user-creds
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          name: itop-user-creds
+          creationPolicy: Owner
+          deletionPolicy: Retain
+        data:
+          - secretKey: username
+            remoteRef:
+              key: apps/itop/database
+              property: username
+          - secretKey: password
+            remoteRef:
+              key: apps/itop/database
+              property: password
+          - secretKey: database
+            remoteRef:
+              key: apps/itop/database
+              property: database
+
+  database:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Database
+    spec:
+      metadata:
+        name: itop
+      spec:
+        characterSet: utf8mb4
+        collate: utf8mb4_unicode_ci
+
+        mariaDbRef:
+          name: itop-mariadb
+          waitForIt: true
+
+  user:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: User
+    spec:
+      metadata:
+        name: itop
+      spec:
+        mariaDbRef:
+          name: itop-mariadb
+          waitForIt: true
+
+        passwordSecretKeyRef:
+          name: itop-user-creds
+          key: password
+
+        maxUserConnections: 20
+
+  grant:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Grant
+    spec:
+      metadata:
+        name: itop-access
+      spec:
+        mariaDbRef:
+          name: itop-mariadb
+          waitForIt: true
+
+        database: itop
+
+        username: itop
+
+        table: "*"
+
+        privileges:
+          - ALL
+
+        grantOption: false
+
+  connection:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: Connection
+    spec:
+      metadata:
+        name: itop-connection
+      spec:
+        mariaDbRef:
+          name: itop-mariadb
+          waitForIt: true
+
+        database: itop
+
+        username: itop
+
+        passwordSecretKeyRef:
+          name: itop-user-creds
+          key: password
+
+        host: itop-mariadb-primary
+
+        serviceName: itop-mariadb-primary
+
+        port: 3306
+
+        secretName: itop-connection
+
+        secretTemplate:
+          key: dsn
+          hostKey: host
+          portKey: port
+          databaseKey: database
+          usernameKey: username
+          passwordKey: password
+
+  collation-init-job:
+    apiVersion: k8s.mariadb.com/v1alpha1
+    kind: SqlJob
+    spec:
+      metadata:
+        name: itop-set-utf8mb4
+      spec:
+        mariaDbRef:
+          name: itop-mariadb
+          namespace: itop
+        passwordSecretKeyRef:
+          name: itop-user-creds
+          key: password
+        username: itop
+        database: itop
+        sql: |
+          ALTER DATABASE itop CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;

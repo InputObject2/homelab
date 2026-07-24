@@ -13,3 +13,9 @@ Helpers for apps stack
 {{- define "apps.xenOrchestra.hostname" -}}
 {{- printf "%s.%s" .Values.xenOrchestra.subdomain .Values.domain }}
 {{- end }}
+{{- define "apps.itop.hostname" -}}
+{{- printf "%s.%s" .Values.itop.subdomain .Values.domain }}
+{{- end }}
+{{- define "apps.itop.image" -}}
+{{- printf "%s.%s/itop" "docker-private-registry" .Values.domain }}
+{{- end }}
