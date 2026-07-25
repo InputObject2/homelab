@@ -120,6 +120,10 @@ configMaps:
             root /var/www/html;
             index index.php index.html;
 
+            location / {
+                return 301 /itop/;
+            }
+
             location /itop/ {
                 try_files $uri $uri/ /itop/index.php?$args;
             }
