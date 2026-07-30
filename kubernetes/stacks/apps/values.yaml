@@ -20,3 +20,6 @@ xenOrchestra:
 
 itop:
   subdomain: itop
+
+n8n:
+  subdomain: workflows

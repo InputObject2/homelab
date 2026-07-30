@@ -19,3 +19,6 @@ Helpers for apps stack
 {{- define "apps.itop.image" -}}
 {{- printf "%s.%s/inputobject2/itop" "docker-private-registry" .Values.domain }}
 {{- end }}
+{{- define "apps.n8n.hostname" -}}
+{{- printf "%s.%s" .Values.n8n.subdomain .Values.domain }}
+{{- end }}
