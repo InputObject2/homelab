@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   github-runner:
-    image: myoung34/github-runner:2.333.1@sha256:07aa22ebda2133771e08c4a2b5b879927d49c1d3c61a3ceaddf72c92e099d429
+    image: myoung34/github-runner:2.336.0@sha256:fc28f4cd67cacf3024984d873b2adbbd5809b85095747fa3fcd2421c098fb846
     container_name: github-runner
     restart: unless-stopped
     volumes:
