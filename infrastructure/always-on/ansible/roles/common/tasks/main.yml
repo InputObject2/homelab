@@ -67,6 +67,12 @@
     port: '9001'
     proto: tcp
 
+- name: Allow snmpd upd port through UFW
+  community.general.ufw:
+    rule: allow
+    port: '161'
+    proto: udp
+
 - name: Enable UFW
   community.general.ufw:
     state: enabled
