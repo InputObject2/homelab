@@ -404,7 +404,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 52 },
       "id": 70,
       "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_exit_code{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_exit_code", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
       "title": "Last Backup Status",
       "type": "stat"
     },
@@ -423,7 +423,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 52 },
       "id": 71,
       "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "(time() - samba_ad_backup_last_success_timestamp_seconds{instance=~\"$instance\"}) / 3600", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "(time() - samba_ad_backup_last_success_timestamp_seconds) / 3600", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
       "title": "Time Since Last Success",
       "type": "stat"
     },
@@ -441,7 +441,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 52 },
       "id": 72,
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
       "title": "Last Backup Size",
       "type": "stat"
     },
@@ -460,7 +460,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 52 },
       "id": 73,
       "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds{instance=~\"$instance\"}", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds", "instant": true, "legendFormat": "{{instance}}", "refId": "A" }],
       "title": "Last Backup Duration",
       "type": "stat"
     },
@@ -479,7 +479,7 @@
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 56 },
       "id": 74,
       "options": { "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes{instance=~\"$instance\"}", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_file_size_bytes", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
       "title": "Backup Size History",
       "type": "timeseries"
     },
@@ -498,7 +498,7 @@
       "gridPos": { "h": 7, "w": 12, "x": 12, "y": 56 },
       "id": 75,
       "options": { "legend": { "calcs": ["lastNotNull", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "none" } },
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds{instance=~\"$instance\"}", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }, "editorMode": "code", "expr": "samba_ad_backup_duration_seconds", "legendFormat": "{{instance}}", "range": true, "refId": "A" }],
       "title": "Backup Duration History",
       "type": "timeseries"
     },
