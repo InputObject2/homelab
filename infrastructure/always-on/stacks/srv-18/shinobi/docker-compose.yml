@@ -1,0 +1,62 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: shinobi_db
+    restart: always
+    environment:
+      - MYSQL_USER=shinobi
+      - MYSQL_DATABASE=shinobi
+      # add MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD in Portainer UI
+    volumes:
+      - /mnt/data/Apps/shinobi/db:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  shinobi:
+    image: registry.gitlab.com/shinobi-systems/shinobi
+    container_name: shinobi_app
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.routers.shinobi.rule=Host(`${ASSIGNED_HOSTNAME}`)"
+      - "traefik.http.routers.shinobi.entrypoints=websecure"
+      - "traefik.http.routers.shinobi.tls.certresolver=cloudflare"
+      - "traefik.http.services.shinobi.loadbalancer.server.port=8080"
+    environment:
+      - DB_DISABLE_INCLUDED=true
+      - DB_HOST=db
+      - MYSQL_USER=shinobi
+      - MYSQL_DATABASE=shinobi
+      # add MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD in Portainer UI
+      # add ASSIGNED_HOSTNAME in Portainer UI
+    volumes:
+      - /mnt/data/Apps/shinobi/config:/config
+      - /mnt/data/Apps/shinobi/custom_auto_load:/home/Shinobi/libs/customAutoLoad
+      - /mnt/data/Apps/shinobi/plugins:/home/Shinobi/plugins
+      - /mnt/data/Apps/shinobi/videos:/home/Shinobi/videos
+    networks:
+      - internal
+      - traefik_network
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.2'
+          memory: 1400M
+        reservations:
+          cpus: '0.35'
+          memory: 580M
+
+networks:
+  internal:
+    driver: bridge
+  traefik_network:
+    external: true

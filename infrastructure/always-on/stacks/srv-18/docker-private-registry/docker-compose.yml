@@ -1,0 +1,37 @@
+services:
+  docker-private-registry:
+    image: docker.io/library/registry:2.8.3
+    container_name: docker-private-registry
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.registry.rule=Host(`${ASSIGNED_HOSTNAME}`)"
+      - "traefik.http.routers.registry.entrypoints=websecure"
+      - "traefik.http.routers.registry.tls.certresolver=cloudflare"
+      - "traefik.http.services.registry.loadbalancer.server.port=5000"
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      # add REGISTRY_HTTP_SECRET in Portainer UI
+      # add ASSIGNED_HOSTNAME in Portainer UI
+    volumes:
+      - /mnt/data/Apps/docker-private-registry:/var/lib/registry
+    networks:
+      - traefik_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.60'
+          memory: 800M
+        reservations:
+          cpus: '0.01'
+          memory: 25M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/v2/"]
+      interval: 10s
+      timeout: 1s
+      retries: 3
+      start_period: 150s
+    restart: always
+
+networks:
+  traefik_network:
+    external: true
