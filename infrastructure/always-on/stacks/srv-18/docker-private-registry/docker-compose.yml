@@ -11,6 +11,7 @@ services:
     environment:
       REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
       # add REGISTRY_HTTP_SECRET in Portainer UI
+      REGISTRY_HTTP_SECRET: ${REGISTRY_HTTP_SECRET}
       # add ASSIGNED_HOSTNAME in Portainer UI
     volumes:
       - /mnt/data/Apps/docker-private-registry:/var/lib/registry

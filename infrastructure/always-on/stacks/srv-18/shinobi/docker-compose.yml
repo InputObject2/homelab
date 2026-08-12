@@ -4,9 +4,11 @@ services:
     container_name: shinobi_db
     restart: always
     environment:
-      - MYSQL_USER=shinobi
-      - MYSQL_DATABASE=shinobi
+      MYSQL_USER: shinobi
+      MYSQL_DATABASE: shinobi
       # add MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD in Portainer UI
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - /mnt/data/Apps/shinobi/db:/var/lib/mysql
     networks:
@@ -35,6 +37,8 @@ services:
       - MYSQL_DATABASE=shinobi
       # add MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD in Portainer UI
       # add ASSIGNED_HOSTNAME in Portainer UI
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - /mnt/data/Apps/shinobi/config:/config
       - /mnt/data/Apps/shinobi/custom_auto_load:/home/Shinobi/libs/customAutoLoad

@@ -3,6 +3,8 @@ services:
     image: traefik:v3
     container_name: traefik
     restart: always
+    environment:
+      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
     ports:
       - "80:80"
       - "443:443"
