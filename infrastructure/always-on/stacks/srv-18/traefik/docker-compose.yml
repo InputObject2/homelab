@@ -4,7 +4,8 @@ services:
     container_name: traefik
     restart: always
     environment:
-      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      CLOUDFLARE_API_KEY: ${CLOUDFLARE_API_KEY}
+      CLOUDFLARE_EMAIL: ${ACME_EMAIL}
     ports:
       - "80:80"
       - "443:443"
