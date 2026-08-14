@@ -25,7 +25,7 @@ controllers:
           - --models-dir
           - /models/gguf/
           - --ctx-size
-          - "32768"
+          - "262144"
           - --n-gpu-layers
           - auto
           - --fit
