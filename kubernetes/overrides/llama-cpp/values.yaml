@@ -10,6 +10,11 @@ controllers:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
           tag: server-vulkan-b9976
+        ports:
+          - name: http
+            containerPort: 8080
+          - name: metrics
+            containerPort: 49427
         args:
           #- -m
           # - /models/gguf/Qwen_Qwen3.6-27B-Q2_K.gguf
@@ -22,8 +27,8 @@ controllers:
           - --ctx-size
           - "32768"
           - --n-gpu-layers
-          - "auto"
-          - "--fit"
+          - auto
+          - --fit
           - "on"
           #- --n-cpu-moe
           #- "17"
@@ -45,7 +50,8 @@ controllers:
           - "1"
           - --threads
           - "8"
-          - "--mlock"
+          - --mlock
+          - --metrics
           - --verbose
           #- --chat-template-file
           # this is getting downloaded via the downloader deployment and dumped in the pvc
@@ -100,6 +106,8 @@ service:
     ports:
       http:
         port: 8080
+      metrics:
+        port: 49427
 
 persistence:
   models:
