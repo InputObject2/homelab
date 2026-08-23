@@ -32,6 +32,26 @@ democratic-csi:
       driver: freenas-api-iscsi
 
   controller:
+    externalAttacher:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+    externalProvisioner:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+    externalResizer:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+    externalSnapshotter:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
     driver:
       resources:
         requests:
@@ -52,10 +72,30 @@ democratic-csi:
 
   node:
     kubeletHostPath: "/var/snap/microk8s/common/var/lib/kubelet"
+    cleanup:
+      resources:
+        requests:
+          cpu: 5m
+          memory: 16Mi
     driver:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
       image:
         registry: docker.io/democraticcsi/democratic-csi
         tag: v1.9.5
+    driverRegistrar:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
     nodeSelector:
       node.kubernetes.io/microk8s-worker: microk8s-worker
     tolerations: []
+
+  csiProxy:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
