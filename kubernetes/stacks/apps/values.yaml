@@ -23,3 +23,7 @@ itop:
 
 n8n:
   subdomain: workflows
+
+forgejo:
+  subdomain: git
+  ssh: git-ssh

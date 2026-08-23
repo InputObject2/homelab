@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/cloudnative-pg/charts/main/charts/cluster/values.schema.json
+
+type: postgresql
+
+version:
+  postgresql: "17"
+
+mode: standalone
+
+cluster:
+  instances: 1
+
+  storage:
+    size: 10Gi
+    storageClass: "truenas-iscsi-nas"
+
+  enableSuperuserAccess: true
+
+  postgresql:
+    pg_hba:
+      - host forgejo forgejo all scram-sha-256
+
+  initdb:
+    database: forgejo
+    owner: forgejo
+
+  roles:
+    - name: forgejo
+      login: true

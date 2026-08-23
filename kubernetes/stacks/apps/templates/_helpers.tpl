@@ -22,3 +22,9 @@ Helpers for apps stack
 {{- define "apps.n8n.hostname" -}}
 {{- printf "%s.%s" .Values.n8n.subdomain .Values.domain }}
 {{- end }}
+{{- define "apps.forgejo.hostname" -}}
+{{- printf "%s.%s" .Values.forgejo.subdomain .Values.domain }}
+{{- end }}
+{{- define "apps.forgejo.ssh_hostname" -}}
+{{- printf "%s.%s" .Values.forgejo.ssh .Values.domain }}
+{{- end }}

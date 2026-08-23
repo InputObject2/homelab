@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgejo
+  namespace: argocd-system
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://bjw-s-labs.github.io/helm-charts/
+      chart: app-template
+      targetRevision: 4.1.2
+      helm:
+        valueFiles:
+          - $values/kubernetes/overrides/forgejo/values.yaml
+        parameters:
+          - name: "ingress.main.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
+            value: '{{ include "apps.forgejo.hostname" . }}.'
+          - name: "ingress.main.hosts[0].host"
+            value: '{{ include "apps.forgejo.hostname" . }}'
+          - name: "ingress.main.tls[0].hosts[0]"
+            value: '{{ include "apps.forgejo.hostname" . }}'
+          - name: "controllers.main.containers.main.env.FORGEJO__server__DOMAIN"
+            value: '{{ include "apps.forgejo.hostname" . }}'
+          - name: "controllers.main.containers.main.env.FORGEJO__server__ROOT_URL"
+            value: 'https://{{ include "apps.forgejo.hostname" . }}'
+          - name: "controllers.main.containers.main.env.FORGEJO__server__SSH_DOMAIN"
+            value: '{{ include "apps.forgejo.ssh_hostname" . }}'
+    - repoURL: {{ .Values.repoURL | quote }}
+      targetRevision: {{ .Values.targetRevision }}
+      ref: values
+  destination:
+    server: {{ .Values.destination.server | quote }}
+    namespace: forgejo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
