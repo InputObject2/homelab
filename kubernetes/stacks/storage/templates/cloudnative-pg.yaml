@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://cloudnative-pg.github.io/charts
       chart: cloudnative-pg
-      targetRevision: v0.26.1
+      targetRevision: v0.29.0
       helm:
         valueFiles:
           - $values/kubernetes/overrides/cloudnative-pg/values.yaml

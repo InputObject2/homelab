@@ -26,15 +26,15 @@ image:
   repository: ghcr.io/cloudnative-pg/cloudnative-pg
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
-  tag: "1.29.0@sha256:68074486205a33ed41928761e22ad48278c690feebe8316727a1c6b3380f9e5e"
+  tag: "1.30.0"
 
-#imagePullSecrets: []
-#nameOverride: ""
-#fullnameOverride: ""
-#namespaceOverride: ""
+# imagePullSecrets: []
+# nameOverride: ""
+# fullnameOverride: ""
+# namespaceOverride: ""
 
-#hostNetwork: false
-#dnsPolicy: ""
+# hostNetwork: false
+# dnsPolicy: ""
 
 # -- Update strategy for the operator.
 # ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
@@ -548,7 +548,10 @@ monitoringQueriesConfigMap:
             description: "Number of disk blocks read in this database"
         - blks_hit:
             usage: "COUNTER"
-            description: "Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the PostgreSQL buffer cache, not the operating system's file system cache)"
+            description: -|
+                "Number of times disk blocks were found already in the buffer cache,
+                so that a read was not necessary (this only includes hits in the PostgreSQL
+                buffer cache, not the operating system's file system cache)"
         - tup_returned:
             usage: "COUNTER"
             description: "Number of rows returned by queries in this database"
