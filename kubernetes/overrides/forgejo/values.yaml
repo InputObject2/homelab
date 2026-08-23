@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-4.1.2/charts/library/common/values.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
+controllers:
+  main:
+    type: deployment
+    strategy: RollingUpdate
+    replicas: 1
+    annotations:
+      k8s_image_swapper: disabled
+    containers:
+      main:
+        image:
+          repository: codeberg.org/forgejo/forgejo
+          tag: "16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        env:
+          FORGEJO__database__DB_TYPE: postgres
+          FORGEJO__database__HOST: forgejo-db-postgresql-primary.forgejo.svc.cluster.local:5432
+          FORGEJO__database__NAME:
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-postgres-forgejo
+                key: database
+          FORGEJO__database__USER:
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-postgres-forgejo
+                key: username
+          FORGEJO__database__PASSWD:
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-postgres-forgejo
+                key: password
+          FORGEJO__server__DOMAIN: git.example.com
+          FORGEJO__server__ROOT_URL: https://git.example.com
+          FORGEJO__server__SSH_DOMAIN: git.example.com.
+          FORGEJO__server__SSH_PORT: "22"
+          FORGEJO__server__START_SSH_SERVER: "true"
+
+          FORGEJO__security__SECRET_KEY:
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-app-secret
+                key: SECRET_KEY
+          FORGEJO__security__INTERNAL_TOKEN:
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-app-secret
+                key: INTERNAL_TOKEN
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        ports:
+          - containerPort: 3000
+            name: http
+          - containerPort: 2222
+            name: ssh
+
+service:
+  main:
+    ports:
+      http:
+        port: 3000
+      ssh:
+        port: 2222
+        targetPort: 2222
+
+  ssh-lb:
+    type: LoadBalancer
+    annotations:
+      lb.metallb.io/address-pool: load-balancer-pool
+    ports:
+      ssh:
+        port: 22
+        targetPort: 2222
+        protocol: TCP
+
+ingress:
+  main:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production-dns01
+    hosts:
+      - host: git.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - hosts:
+          - git.example.com
+        secretName: tls-forgejo
+
+persistence:
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: truenas-nfs-nas
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    globalMounts:
+      - path: /var/lib/forgejo
+
+rawResources:
+  forgejo-app-secret:
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    spec:
+      metadata:
+        name: forgejo-app-secret
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          kind: ClusterSecretStore
+          name: vault-backend
+        target:
+          name: forgejo-app-secret
+          creationPolicy: Owner
+          deletionPolicy: Retain
+        data:
+          - secretKey: SECRET_KEY
+            remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: secret/data/apps/forgejo
+              property: SECRET_KEY
+          - secretKey: INTERNAL_TOKEN
+            remoteRef:
+              conversionStrategy: Default
+              decodingStrategy: None
+              key: secret/data/apps/forgejo
+              property: INTERNAL_TOKEN
