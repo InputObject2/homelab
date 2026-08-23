@@ -17,6 +17,8 @@ spec:
         parameters:
           - name: "ingress.main.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
             value: '{{ include "apps.forgejo.hostname" . }}.'
+          - name: "service.ssh.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
+            value: '{{ include "apps.forgejo.ssh_hostname" . }}.'
           - name: "ingress.main.hosts[0].host"
             value: '{{ include "apps.forgejo.hostname" . }}'
           - name: "ingress.main.tls[0].hosts[0]"

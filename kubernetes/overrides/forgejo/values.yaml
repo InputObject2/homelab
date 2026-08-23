@@ -15,7 +15,7 @@ controllers:
       main:
         image:
           repository: codeberg.org/forgejo/forgejo
-          tag: "16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd"
+          tag: "16.0.3-rootless@sha256:214f4ae63ee78be1e445e58573c88dc7215e72091210852e0df94eaac1a25685"
         resources:
           requests:
             cpu: 50m
@@ -25,21 +25,23 @@ controllers:
             memory: 512Mi
         env:
           FORGEJO__database__DB_TYPE: postgres
-          FORGEJO__database__HOST: forgejo-db-postgresql-primary.forgejo.svc.cluster.local:5432
+          # the variable expects HOST:PORT and the cnpg secret doesn't offer that so we're combining them ourselves
+          FORGEJO__database__HOST:
+            value: "forgejo-postgres-cluster-rw:5432"
           FORGEJO__database__NAME:
             valueFrom:
               secretKeyRef:
-                name: forgejo-postgres-forgejo
-                key: database
+                name: forgejo-postgres-cluster-app
+                key: dbname
           FORGEJO__database__USER:
             valueFrom:
               secretKeyRef:
-                name: forgejo-postgres-forgejo
+                name: forgejo-postgres-cluster-app
                 key: username
           FORGEJO__database__PASSWD:
             valueFrom:
               secretKeyRef:
-                name: forgejo-postgres-forgejo
+                name: forgejo-postgres-cluster-app
                 key: password
           FORGEJO__server__DOMAIN: git.example.com
           FORGEJO__server__ROOT_URL: https://git.example.com
@@ -104,7 +106,7 @@ ingress:
           - path: /
             pathType: Prefix
             service:
-              name: main
+              name: forgejo-main
               port: 3000
     tls:
       - hosts:
@@ -116,7 +118,7 @@ persistence:
     enabled: true
     type: persistentVolumeClaim
     storageClass: truenas-nfs-nas
-    accessMode: ReadWriteOnce
+    accessMode: ReadWriteMany
     size: 20Gi
     globalMounts:
       - path: /var/lib/forgejo
