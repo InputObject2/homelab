@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   omada-controller:
-    image: mbentley/omada-controller:6.2.10.17-openj9@sha256:211dcc5f37c9c995aa0cbf6fdd4787bf8439fac019dbe991ca136e152cf45b14
+    image: mbentley/omada-controller:6.3.0.45-openj9@sha256:f26f871e48454d948691b4fb339b7fada2b3f3f586a2391ea74bba007d5c7148
     container_name: omada
     restart: unless-stopped
     ports:
