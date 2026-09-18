@@ -61,7 +61,7 @@ services:
       - /opt/secrets/zigbee2mqtt/zigbee2mqtt.env
 
   mosquitto:
-    image: eclipse-mosquitto:2.0.22@sha256:914f529386804c8278a4e581526b9be5e1604df44b30daabc70aa97dcefe5268
+    image: eclipse-mosquitto:2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
     container_name: mosquitto
     restart: unless-stopped
     volumes:
