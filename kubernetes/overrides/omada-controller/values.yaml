@@ -29,7 +29,7 @@ controllers:
               - ALL
         image:
           repository: mbentley/omada-controller
-          tag: 6.2.10.17@sha256:4cf1c3256b2b99364cc9e71fc33f72ad557c196b918ad745eefbf40089ed4a39
+          tag: 6.3.0.111@sha256:c173db0ddf8e908edb145f38e5b683acc66d6af2d2826484cedc444eb8757000
           pullPolicy: IfNotPresent
 
         env:
