@@ -54,7 +54,7 @@ services:
       - '-config.file=/etc/tempo/tempo.yaml'
 
   influxdb:
-    image: influxdb:2.8.0@sha256:e3e7ee6476007edc0577e9114c78028112e92e48ead3545865d35187cd9a5eda
+    image: influxdb:2.10.1@sha256:94e98bf5a07587c91bac4f6059aa2ddc172cd246bbd296852a30654192a38a03
     container_name: influxdb
     restart: unless-stopped
     ports:
